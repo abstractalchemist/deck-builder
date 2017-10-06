@@ -86,15 +86,36 @@ function Card({id,image,abilities,count,removehandler,addhandler}) {
 	    })()}
 	    </div>
 	    <div className="mdl-card__actions">
-	    <button className="mdl-button mdl-js-button mdl-button--fab mdl-button--colored" data-id={id} onClick={removehandler}>
-	    <i className="material-icons">remove</i>
-	    </button>
-	    <button className="mdl-button mdl-js-button mdl-button--fab mdl-button--colored" data-id={id} onClick={addhandler}>
-	    <i className="material-icons">add</i>
-	    </button>
+	    {( _ => {
+		if(removehandler)
+		    return ( <button className="mdl-button mdl-js-button mdl-button--fab mdl-button--colored" data-id={id} onClick={removehandler}>
+			     <i className="material-icons">remove</i>
+			     </button>)
+	    })()}
+	    {( _ => {
+		if(addhandler)
+		    return (<button className="mdl-button mdl-js-button mdl-button--fab mdl-button--colored" data-id={id} onClick={addhandler}>
+			    <i className="material-icons">add</i>
+			    </button>)
+	    })()}
 	    </div>
 	    </div>)
 
+}
+
+function SearchField({value,changehandler}) {
+    return (<div className="mdl-textfield mdl-js-textfield mdl-textfield--expandable
+                  mdl-textfield--floating-label mdl-textfield--align-right">
+	    
+            <label className="mdl-button mdl-js-button mdl-button--icon" htmlFor="fixed-header-drawer-exp">
+            <i className="material-icons">search</i>
+            </label>
+	    
+            <div className="mdl-textfield__expandable-holder">
+            <input className="mdl-textfield__input" type="text" name="sample" id="fixed-header-drawer-exp" value={value} onChange={changehandler}></input>
+	    
+            </div>
+	    </div>)
 }
 
 class Main extends React.Component {
@@ -110,14 +131,40 @@ class Main extends React.Component {
 		       content : this.buildDeck.bind(this) },
 		     { id: "card_viewer",
 		       label : "Card Viewer",
-		       content : function() {
-			   return (<div className="mdl-grid">
-				  
-				   </div>)
-		     }}];
+		       content : this.buildCardSet.bind(this) }]
+		     
+    }
+
+    filterCardSet(evt) {
+	this.setState({cardset_filter:evt.target.value});
+	
     }
 
     buildCardSet() {
+	return (<div className="mdl-grid">
+		<div className="mdl-cell mdl-cell--6-col">
+		<Menu menu_id="cardests" items={Cards.getcardsets()} clickhandler={this.updateCardView.bind(this)} />
+		</div>
+		<div className="mdl-cell mdl-cell--6-col">
+		<SearchField value={this.state.cardset_filter} changehandler={this.filterCardSet.bind(this)}/>
+		</div>
+		{( _ => {
+		    if(this.state.cardset) {
+			
+			let cardset = Cards.getcardsfromset(this.state.cardset);
+			if(this.state.cardset_filter) {
+			    cardset = cardset.filter( card => new RegExp(this.state.cardset_filter).test(card.abilities) );
+			}
+			return cardset.map(card => <div className="mdl-cell mdl-cell--3-col"><Card {...card} /></div>);
+		    }
+		})()}
+		</div>)
+    }
+
+    updateCardView(evt) {
+	let target = evt.target.dataset.id;
+	this.setState({cardset:target});
+	
     }
 
     addCardToDeck(evt) {

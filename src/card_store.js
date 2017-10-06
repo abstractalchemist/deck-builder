@@ -19,7 +19,7 @@ export default (function() {
 
 	// get all known card sets
 	getcardsets() {
-	    return ["VS"];
+	    return [{id:"VS",label:"Vivid Strke"}];
 	}
     };
 })()
