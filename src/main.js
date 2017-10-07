@@ -102,8 +102,12 @@ class Main extends React.Component {
 		    observable.subscribe(
 			card => {
 			    deck.push(Object.assign({}, card, { count: 1 }));
+			    
+			    this.setState({deck});
+			    document.querySelector("#deck_builder_tab").classList.add("is-active");
+			    document.querySelector("#deck_builder").classList.add("is-active");
 			});
-		    this.setState({deck});
+		
 		}
 		else
 		    alert("Card exists in deck");
@@ -111,6 +115,18 @@ class Main extends React.Component {
 	}
 	else
 	    alert("target undefined");
+    }
+
+    updateCardCount(evt) {
+	let target = evt.target.dataset.id;
+	if(target) {
+	    let deck = this.state.deck;
+	    let index = deck.findIndex( ({id}) => id === target);
+	    if(index >= 0) {
+		deck[index].count = deck[index].count + 1;
+		this.setState({deck});
+	    }
+	}
     }
 
     removeCardFromDeck(evt) {
@@ -139,7 +155,9 @@ class Main extends React.Component {
 		<div className="mdl-textfield mdl-js-textfield">
 		<input className="mdl-textfield__input" type="text" id="name" value={this.state.deck_input_name} onChange={
 		    evt => {
+			
 			this.setState({deck_input_name: evt.target.value});
+			
 		    }}>
 		</input>
 		<label className="mdl-textfield__label" htmlFor="name">Name</label>
@@ -148,13 +166,18 @@ class Main extends React.Component {
 		<div className="mdl-dialog__actions mdl-dialog__action--full-width">
 		<button className="mdl-button mdl-js-button" onClick={
 		    _ => {
-			Deck.adddeck(this.state.deck_input_name).subscribe(
-			    _ => {
-				let dialog = document.querySelector('#deck_name');
-				
-				dialog.close();
-				this.setState({deck_input_name:""});
-			    });
+			Deck.adddeck(this.state.deck_input_name)
+			    .selectMany( _ => {
+				return Deck.getdecks();
+			    })
+			    .subscribe(
+				decks => {
+				    let dialog = document.querySelector('#deck_name');
+				    
+				    dialog.close();
+				    
+				    this.setState({deck_input_name:"",decks});
+				});
 		    }
 		}>
 		Add
@@ -186,7 +209,7 @@ class Main extends React.Component {
 				    let dialog = document.querySelector('#deck_settings');
 				    dialog.close();
 				}
-			    }>
+ 			    }>
 				    <span className="mdl-list__item-primary-content">
 				    <i className="material-icons mdl-list__item-icon">view_stream</i>
 				    {label}
@@ -253,7 +276,8 @@ class Main extends React.Component {
 		}>
 		Save Settings
 		</button>
-		<table style={{ display:"inline-block" }} className="mdl-data-table mdl-js-data-table">
+
+		<table id="deck_stats" style={{ display:"inline-block" }} className="mdl-data-table mdl-js-data-table">
 		<thead>
 		<tr>
 		<th>
@@ -284,16 +308,20 @@ class Main extends React.Component {
 		</tr>
 		</tbody>
 		</table>
-		
+		<div className="mdl-textfield mdl-js-textfield" style={{display:"inline-block"}}>
+		<label htmlFor="deck_label" className="mdl-textfield__label">{this.state.deck_name}</label>
+		<input id="deck_label" className="mdl-textfield__input"></input>
+		</div>
+		</div>
 		{this.buildDialog()}
 		{this.buildNameDialog()}
-		</div>
+
 		{( _ => {
 		    if(this.state.deck) {
 			console.log("building deck view");
 			return this.state.deck.map(card => {
 			    return (<div className="mdl-cell mdl-cell--3-col">
-				    <Card {...card} addhandler={this.addCardToDeck.bind(this)} removehandler={this.removeCardFromDeck.bind(this)}/>
+				    <Card {...card} addhandler={this.updateCardCount.bind(this)} removehandler={this.removeCardFromDeck.bind(this)}/>
 				    </div>)
 			});
 		    }
@@ -307,24 +335,30 @@ class Main extends React.Component {
     updateDeckView(evt) {
 	let target = evt.target.dataset.id;
 
-	
-	let observer = Deck.getdeck(target);
-	observer.subscribe(
-	    deck => {
-		if(deck && deck.deck) {
-		    console.log("setting target to " + target);
-		    Rx.Observable.fromArray(deck.deck)
-			.selectMany( ({id,count}) => {
-			    return Cards.getcard(id).map(data => Object.assign({}, data, {count}))
-			})
-			.toArray()
-			.subscribe(
-			    data => {
-				this.setState({deck:data,deck_id:deck.id})
-			    });
-		}
-	    })
-	
+	if(target) {
+	    let observer = Deck.getdeck(target);
+	    observer.subscribe(
+		deck => {
+		    if(deck && deck.deck) {
+			console.log("setting target to " + target);
+			Rx.Observable.fromArray(deck.deck)
+			    .selectMany( ({id,count}) => {
+				return Cards.getcard(id).map(data => Object.assign({}, data, {count}))
+			    })
+			    .toArray()
+			    .subscribe(
+				data => {
+				    this.setState({deck:data,deck_id:deck.id,deck_name:deck.label})
+				},
+				err => {
+				    alert(err);
+				});
+		    }
+		})
+
+	}
+	else
+	    alert("no target detected");
 	
     }
     

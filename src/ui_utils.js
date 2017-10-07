@@ -6,7 +6,7 @@ function Nav({title,links,tabs}) {
 	if(tabs) {
 	    return (<div className="mdl-layout__tab-bar mdl-js-ripple-effect">
 		    {( _ => {
-			return tabs.map(({id,label}) => <a href={"#" + id} className="mdl-layout__tab">{label}</a>)
+			return tabs.map(({id,label}) => <a href={"#" + id} className="mdl-layout__tab" id={id + "_tab"}>{label}</a>)
 		    })()}
 		    </div>)
 	}
