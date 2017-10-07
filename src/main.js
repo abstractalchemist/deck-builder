@@ -177,12 +177,107 @@ class Main extends React.Component {
 	console.log("removing " + target + " from deck");
     }
 
+    buildNameDialog() {
+	return (<dialog id='deck_name' className='mdl-dialog'>
+		<div className="mdl-dialog__content">
+		<div className="mdl-textfield mdl-js-textfield">
+		<input className="mdl-textfield__input" type="text" id="name" value={this.state.deck_input_name} onChange={
+		    evt => {
+			this.setState({deck_input_name: evt.target.value});
+		    }}>
+		</input>
+		<label className="mdl-textfield__label" htmlFor="name">Name</label>
+		</div>
+		</div>
+		<div className="mdl-dialog__actions mdl-dialog__action--full-width">
+		<button className="mdl-button mdl-js-button" onClick={
+		    _ => {
+			Deck.adddeck(this.state.deck_input_name).subscribe(
+			    _ => {
+				let dialog = document.querySelector('#deck_name');
+				
+				dialog.close();
+				this.setState({deck_input_name:""});
+			    });
+		    }
+		}>
+		Add
+		</button>
+		<button className="mdl-button mdl-js-button" onClick={
+		    _ => {
+			let dialog = document.querySelector('#deck_name');
+			dialog.close();
+		    }
+		}>
+		Cancel
+		</button>
+		
+		</div>
+		</dialog>)
+    }
+
+    buildDialog() {
+	return (<dialog id='deck_settings' className="mdl-dialog">
+		<div className="mdl-dialog__content">
+		<ul className="mdl-list">
+		{( _ => {
+		    let decks = Deck.getdecks();
+		    if(decks) {
+			return decks.map( ({id,label}) => {
+			    return (<li data-id={id} className="mdl-list__item" onClick={this.updateDeckView.bind(this)}>
+				    <span className="mdl-list__item-primary-content">
+				    <i className="material-icons mdl-list__item-icon">view_stream</i>
+				    {label}
+				    </span>
+				    <span className="mdl-list__item-secondary-action">
+				    <button className="mdl-button mdl-js-button">
+				    Delete
+				    </button>
+				    </span>
+				    </li>)
+			})
+		    }
+		})()}
+		</ul>
+		</div>
+		<div className="mdl-dialog__actions mdl-dialog__actions--full-width">
+		<button className="mdl-button mdl-js-button" onClick={
+		    _ => {
+			let dialog = document.querySelector('#deck_name');
+			if(!dialog.showModal)
+			    dialogPolyfill.registerDialog(dialog)
+			dialog.showModal();
+		    }}>
+		Add Deck
+		</button>
+		<button className="mdl-button mdl-js-button" onClick={
+		    (evt => {
+			let dialog = document.querySelector('#deck_settings');
+			dialog.close();
+		    })
+		}>
+		Close
+		</button>
+		</div>
+		</dialog>)
+    }
+
     buildDeck() {
 	return (<div className="mdl-grid">
 		<div className="mdl-cell mdl-cell--12-col">
 		{ /* add deck ids here */}
-		<Menu menu_id="decks" items={Deck.getdecks()} clickhandler={this.updateDeckView.bind(this)} />
-		
+
+		<button className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
+		    ( evt => {
+			let dialog = document.querySelector('#deck_settings');
+			if(!dialog.showModal)
+			    dialogPolyfill.registerDialog(dialog);
+			dialog.showModal();
+		    })}>
+		Deck Settings
+		</button>
+		{this.buildDialog()}
+		{this.buildNameDialog()}
 		</div>
 		{( _ => {
 		    if(this.state.deck) {
