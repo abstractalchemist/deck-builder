@@ -245,7 +245,10 @@ class Main extends React.Component {
 		</button>
 		<button className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
 		    evt => {
-			Deck.updatedeck(this.state.deck_id, this.state.deck);
+			Deck.updatedeck(this.state.deck_id, this.state.deck).subscribe(
+			    _ => {
+				console.log("save successful");
+			    });
 		    }
 		}>
 		Save Settings
