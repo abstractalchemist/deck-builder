@@ -10,8 +10,9 @@ export default (function() {
     return {
 
 	getownership(card_id) {
-	    return Rx.Observable.from(observer => {
-		return { count: 0, price: "1.00" }
+	    return Rx.Observable.create(observer => {
+		observer.onNext({ count: 0, price: "1.00" });
+		observer.onCompleted();
 	    })
 	},
 

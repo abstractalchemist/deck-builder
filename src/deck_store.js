@@ -14,14 +14,17 @@ export default (function() {
 	    })
 	},
 	getdecks() {
-	    return decks;
+	    return Rx.Observable.fromArray(decks).toArray();
 	},
 	getdeck(id) {
-	    return { id : 1,
-		     deck : [{id:"VS/W50-033",count:4},
-			     {id:"VS/W50-043",count:1},
-			     {id:"VS/W50-003",count:1},
-			     {id:"VS/W50-069",count:1}] }
+	    return Rx.Observable.create(observer => {
+		observer.onNext({ id : 1,
+				  deck : [{id:"VS/W50-033",count:4},
+					  {id:"VS/W50-043",count:1},
+					  {id:"VS/W50-003",count:1},
+					  {id:"VS/W50-069",count:1}] });
+		observer.onCompleted();
+	    });
 	},
 	updatedeck(id,deck) {
 	}

@@ -27,6 +27,11 @@ class Main extends React.Component {
 	    data => {
 		this.setState({cardsets:data});
 	    });
+
+	Deck.getdecks().subscribe(
+	    data => {
+		this.setState({decks:data});
+	    })
 	    
     }
 
@@ -52,8 +57,9 @@ class Main extends React.Component {
 			    
 			}
 			return this.state.cardset_coll.map(card => {
-			    let ownership = Cards.getownership(card.id);
-			    let count = ownership ? ownership.count : 0;
+
+
+			    let count = card.ownership.count == 0 ? card.ownership.price : card.ownership.count;
 			    
 			    return (<div className="mdl-cell mdl-cell--3-col">
 				    <Card {...card} addhandler={this.addCardToDeck.bind(this)} count={count}>
@@ -71,10 +77,7 @@ class Main extends React.Component {
 	let observable = Cards.getcardsfromset(target);
 	observable
 	    .selectMany(data => {
-		return Rx.Observable.fromArray(data)
-	    })
-	    .selectMany(data => {
-		return Card.getownsership(data.id).map( ownership => {
+		return Cards.getownership(data.id).map( ownership => {
 		    return Object.assign({}, data, {ownership})
 		})
 	    })
@@ -174,7 +177,7 @@ class Main extends React.Component {
 		<div className="mdl-dialog__content">
 		<ul className="mdl-list">
 		{( _ => {
-		    let decks = Deck.getdecks();
+		    let decks = this.state.decks;
 		    if(decks) {
 			return decks.map( ({id,label}) => {
 			    return (<li data-id={id} className="mdl-list__item" onClick={
@@ -301,23 +304,27 @@ class Main extends React.Component {
     updateDeckView(evt) {
 	let target = evt.target.dataset.id;
 
-	let deck = Deck.getdeck(target);
-	if(deck && deck.deck) {
-	    console.log("setting target to " + target);
-	    Rx.Observable.fromArray(deck.deck)
-		.selectMany( ({id,count}) => {
-		    return Card.getcard(id).map(data => Obect.assign({}, data, {count}))
-		})
-		.toArray()
-		.subscribe(
-		    data => {
-			this.setState({deck:data,deck_id:deck.id})
-		    });
-	    
-								     
-	}
+	
+	let observer = Deck.getdeck(target);
+	observer.subscribe(
+	    deck => {
+		if(deck && deck.deck) {
+		    console.log("setting target to " + target);
+		    Rx.Observable.fromArray(deck.deck)
+			.selectMany( ({id,count}) => {
+			    return Cards.getcard(id).map(data => Object.assign({}, data, {count}))
+			})
+			.toArray()
+			.subscribe(
+			    data => {
+				this.setState({deck:data,deck_id:deck.id})
+			    });
+		}
+	    })
+	
+	
     }
-
+    
     generateTabs() {
 	if(this.tabs) {
 	    return this.tabs.map( ({id,content}) => {
