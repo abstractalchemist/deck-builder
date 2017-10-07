@@ -69,7 +69,7 @@ function Menu({menu_id,items,clickhandler}) {
 	    </div>)
 }
 
-function Card({id,image,abilities,count,removehandler,addhandler}) {
+function Card({id,image,abilities,count,removehandler,addhandler,children}) {
     return (<div className="mdl-card" style={{width:"100%"}}>
 	    <div className="mdl-card__title">
 	    </div>
@@ -83,6 +83,8 @@ function Card({id,image,abilities,count,removehandler,addhandler}) {
 	    {(_ => {
 		if(abilities)
 		    return abilities.map( text => <p style={{fontSize:"10px"}}>{text}</p>)
+		else if(children)
+		    return children
 	    })()}
 	    </div>
 	    <div className="mdl-card__actions">
@@ -154,8 +156,18 @@ class Main extends React.Component {
 			let cardset = Cards.getcardsfromset(this.state.cardset);
 			if(this.state.cardset_filter) {
 			    cardset = cardset.filter( card => new RegExp(this.state.cardset_filter).test(card.abilities) );
+			    
 			}
-			return cardset.map(card => <div className="mdl-cell mdl-cell--3-col"><Card {...card} addhandler={this.addCardToDeck.bind(this)}/></div>);
+			return cardset.map(card => {
+			    let ownership = Cards.getownership(card.id);
+			    let count = ownership ? ownership.count : 0;
+			    
+			    return (<div className="mdl-cell mdl-cell--3-col">
+				    <Card {...card} addhandler={this.addCardToDeck.bind(this)} count={count}>
+				    
+				    </Card>
+				    </div>)
+			})
 		    }
 		})()}
 		</div>)
@@ -170,17 +182,21 @@ class Main extends React.Component {
     addCardToDeck(evt) {
 	let target = evt.target.dataset.id;
 	console.log("adding " + target + " to deck");
-	let deck = this.state.deck;
-	if(deck) {
-	    let card = Cards.getcard(target);
-	    let c = deck.filter( ({id}) => id === target);
-	    if(c.length == 0) {
-		deck.push(Object.assign({}, card, { count: 1 }));
-		this.setState({deck});
+	if(target) {
+	    let deck = this.state.deck;
+	    if(deck) {
+		let card = Cards.getcard(target);
+		let c = deck.filter( ({id}) => id === target);
+		if(c.length == 0) {
+		    deck.push(Object.assign({}, card, { count: 1 }));
+		    this.setState({deck});
+		}
+		else
+		    alert("Card exists in deck");
 	    }
-	    else
-		alert("Card exists in deck");
 	}
+	else
+	    alert("target undefined");
     }
 
     removeCardFromDeck(evt) {
@@ -199,6 +215,8 @@ class Main extends React.Component {
 		this.setState({deck:deck});
 	    }
 	}
+	else
+	    alert("target undefined");
     }
 
     buildNameDialog() {
@@ -293,6 +311,11 @@ class Main extends React.Component {
     }
 
     buildDeck() {
+
+	let levelcalculator = lvl => {
+	    if(this.state.deck)
+		return this.state.deck.filter( ({ level }) => level === lvl).length
+	}
 	return (<div className="mdl-grid">
 		<div className="mdl-cell mdl-cell--12-col">
 		{ /* add deck ids here */}
@@ -313,6 +336,38 @@ class Main extends React.Component {
 		}>
 		Save Settings
 		</button>
+		<table style={{ display:"inline-block" }} className="mdl-data-table mdl-js-data-table">
+		<thead>
+		<tr>
+		<th>
+		Level 3
+		</th>
+		<th>
+		Level 2
+		</th>
+		<th>
+		Level 1
+		</th>
+		<th>
+		Level 0
+		</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr>
+		<td>{levelcalculator(3)}
+		</td>
+		<td>{levelcalculator(2)}
+		</td>
+		
+		<td>{levelcalculator(1)}
+		</td>
+		<td>{levelcalculator(0)}
+		</td>
+		</tr>
+		</tbody>
+		</table>
+		
 		{this.buildDialog()}
 		{this.buildNameDialog()}
 		</div>
