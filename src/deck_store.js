@@ -3,6 +3,7 @@ import Rx from 'rx';
 export default (function() {
     let decks = [{id:1,label:"Testing"}];
     return {
+
 	adddeck(name) {
 	    return Rx.Observable.create( observer => {
 		let decklength = decks.length;

@@ -155,7 +155,7 @@ class Main extends React.Component {
 			if(this.state.cardset_filter) {
 			    cardset = cardset.filter( card => new RegExp(this.state.cardset_filter).test(card.abilities) );
 			}
-			return cardset.map(card => <div className="mdl-cell mdl-cell--3-col"><Card {...card} /></div>);
+			return cardset.map(card => <div className="mdl-cell mdl-cell--3-col"><Card {...card} addhandler={this.addCardToDeck.bind(this)}/></div>);
 		    }
 		})()}
 		</div>)
@@ -170,11 +170,35 @@ class Main extends React.Component {
     addCardToDeck(evt) {
 	let target = evt.target.dataset.id;
 	console.log("adding " + target + " to deck");
+	let deck = this.state.deck;
+	if(deck) {
+	    let card = Cards.getcard(target);
+	    let c = deck.filter( ({id}) => id === target);
+	    if(c.length == 0) {
+		deck.push(Object.assign({}, card, { count: 1 }));
+		this.setState({deck});
+	    }
+	    else
+		alert("Card exists in deck");
+	}
     }
 
     removeCardFromDeck(evt) {
 	let target = evt.target.dataset.id;
-	console.log("removing " + target + " from deck");
+	if(target) {
+	    console.log("removing " + target + " from deck");
+	    let cardIndex = this.state.deck.findIndex( ({id}) => id === target );
+	    if(cardIndex >= 0) {
+
+		let deck = this.state.deck;
+		let card = deck[cardIndex];
+		if(card.count > 1)
+		    card.count = card.count - 1;
+		else 
+		    deck.splice(cardIndex,1);
+		this.setState({deck:deck});
+	    }
+	}
     }
 
     buildNameDialog() {
@@ -224,7 +248,13 @@ class Main extends React.Component {
 		    let decks = Deck.getdecks();
 		    if(decks) {
 			return decks.map( ({id,label}) => {
-			    return (<li data-id={id} className="mdl-list__item" onClick={this.updateDeckView.bind(this)}>
+			    return (<li data-id={id} className="mdl-list__item" onClick={
+				evt => {
+				    this.updateDeckView(evt);
+				    let dialog = document.querySelector('#deck_settings');
+				    dialog.close();
+				}
+			    }>
 				    <span className="mdl-list__item-primary-content">
 				    <i className="material-icons mdl-list__item-icon">view_stream</i>
 				    {label}
@@ -276,6 +306,13 @@ class Main extends React.Component {
 		    })}>
 		Deck Settings
 		</button>
+		<button className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
+		    evt => {
+			Deck.updatedeck(this.state.deck_id, this.state.deck);
+		    }
+		}>
+		Save Settings
+		</button>
 		{this.buildDialog()}
 		{this.buildNameDialog()}
 		</div>
@@ -302,7 +339,8 @@ class Main extends React.Component {
 	if(deck && deck.deck) {
 	    console.log("setting target to " + target);
 	    let cards = deck.deck.map(({id,count}) => Object.assign({},Cards.getcard(id), {count}));
-	    this.setState({deck: cards});
+	    
+	    this.setState({deck: cards, deck_id: deck.id});
 	}
     }
 
