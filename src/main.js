@@ -106,6 +106,9 @@ class Main extends React.Component {
 			    this.setState({deck});
 			    document.querySelector("#deck_builder_tab").classList.add("is-active");
 			    document.querySelector("#deck_builder").classList.add("is-active");
+			    document.querySelector("#card_viewer_tab").classList.remove("is-active");
+			    document.querySelector("#card_viewer").classList.remove("is-active");
+			    
 			});
 		
 		}
