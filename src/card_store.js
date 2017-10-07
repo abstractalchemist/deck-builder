@@ -1,4 +1,4 @@
-import Http from './utils';
+import Http from 'utils';
 import Rx from 'rx';
 
 export default (function() {

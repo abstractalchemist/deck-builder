@@ -11,9 +11,12 @@
   "dependencies": {
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
-    "rx": "^4.1.0"
+    "rx": "^4.1.0",
+    "ui-utils": "git+ssh://git@github.com/abstractalchemist/ui-utils.git",
+    "utils": "git+ssh://git@github.com/abstractalchemist/utils.git"
   },
   "devDependencies": {
+    "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.0",
     "babel-preset-react": "^6.24.1",
     "babelify": "^7.3.0",

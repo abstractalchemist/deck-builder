@@ -2,7 +2,7 @@ import React from 'react';
 import Deck from './deck_store';
 import Cards from './card_store';
 import Rx from 'rx';
-import {Nav,Drawer,Body,Menu,Card,SearchField} from './ui_utils';
+import {Nav,Drawer,Body,Menu,Card,SearchField} from 'ui-utils';
 
 class Main extends React.Component {
 
@@ -104,10 +104,10 @@ class Main extends React.Component {
 			    deck.push(Object.assign({}, card, { count: 1 }));
 			    
 			    this.setState({deck});
-			    document.querySelector("#deck_builder_tab").classList.add("is-active");
-			    document.querySelector("#deck_builder").classList.add("is-active");
-			    document.querySelector("#card_viewer_tab").classList.remove("is-active");
-			    document.querySelector("#card_viewer").classList.remove("is-active");
+			    //document.querySelector("#deck_builder_tab").classList.add("is-active");
+			    //document.querySelector("#deck_builder").classList.add("is-active");
+			    //document.querySelector("#card_viewer_tab").classList.remove("is-active");
+			    //document.querySelector("#card_viewer").classList.remove("is-active");
 			    
 			});
 		
