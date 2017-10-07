@@ -1,124 +1,8 @@
 import React from 'react';
 import Deck from './deck_store';
 import Cards from './card_store';
-
-function Nav({title,links,tabs}) {
-
-    const generateTabHeaders = _ => {
-	if(tabs) {
-	    return (<div className="mdl-layout__tab-bar mdl-js-ripple-effect">
-		    {( _ => {
-			return tabs.map(({id,label}) => <a href={"#" + id} className="mdl-layout__tab">{label}</a>)
-		    })()}
-		    </div>)
-	}
-
-    }
-    
-    return (<header className="mdl-layout__header">
-	    <div className="mdl-layout-icon"></div>
-	    
-	    <div className="mdl-layout__header-row">
-	    <span className="mdl-layout__title">{title}</span>
-	    <div className="mdl-layout-spacer"></div>
-	    <nav className="mdl-navigation">
-	    {( _ => {
-		if(links) {
-		    return links.map(({id,label}) => <a className="mdl-navigation__link" href={"#" + id}>{label}</a>);
-		}
-	    })()}
-	    </nav>
-
-	    </div>
-	    {generateTabHeaders()}
-	    </header>);
-}
-
-function Drawer({title,links}) {
-    return (<div className="mdl-layout__drawer">
-	    <span className="mdl-layout-title">{title}</span>
-	    <nav className="mdl-navigation">
-	    {( _ => {
-		if(links) {
-		    return links.map(({href,label}) => <a className="mdl-navigation__link" href={href}>{label}</a>);
-		}
-	    })()}
-				    
-	    </nav>
-	    </div>);
-}
-
-function Body({children}) {
-    return ( <main className="mdl-layout__content">
-	     {children}
-	     </main> )
-}
-
-function Menu({menu_id,items,clickhandler}) {
-    return (<div>
-	    <button id={menu_id} className="mdl-button mdl-js-button mdl-button__icon">
-	    <i className="material-icons">more_vert</i>
-	    </button>
-	    <ul htmlFor={menu_id} className="mdl-menu mdl-js-menu">
-	    {( _ => {
-		if(items)
-		    return items.map(({ label, id }) => <li onClick={clickhandler} className="mdl-menu__item" data-id={id}>{label}</li>);
-	    })()
-	    }
-	    </ul>
-	    </div>)
-}
-
-function Card({id,image,abilities,count,removehandler,addhandler,children}) {
-    return (<div className="mdl-card" style={{width:"100%"}}>
-	    <div className="mdl-card__title">
-	    </div>
-	    <span className="mdl-badge mdl-badge--overlap" data-badge={count}></span>
-	    <div className="mdl-card__media">
-
-	    <img src={image} style={{width:"100%"}} ></img>
-
-	    </div>
-	    <div className="mdl-card__supporting-text">
-	    {(_ => {
-		if(abilities)
-		    return abilities.map( text => <p style={{fontSize:"10px"}}>{text}</p>)
-		else if(children)
-		    return children
-	    })()}
-	    </div>
-	    <div className="mdl-card__actions">
-	    {( _ => {
-		if(removehandler)
-		    return ( <button className="mdl-button mdl-js-button mdl-button--fab mdl-button--colored" data-id={id} onClick={removehandler}>
-			     <i className="material-icons">remove</i>
-			     </button>)
-	    })()}
-	    {( _ => {
-		if(addhandler)
-		    return (<button className="mdl-button mdl-js-button mdl-button--fab mdl-button--colored" data-id={id} onClick={addhandler}>
-			    <i className="material-icons">add</i>
-			    </button>)
-	    })()}
-	    </div>
-	    </div>)
-
-}
-
-function SearchField({value,changehandler}) {
-    return (<div className="mdl-textfield mdl-js-textfield mdl-textfield--expandable
-                  mdl-textfield--floating-label mdl-textfield--align-right">
-	    
-            <label className="mdl-button mdl-js-button mdl-button--icon" htmlFor="fixed-header-drawer-exp">
-            <i className="material-icons">search</i>
-            </label>
-	    
-            <div className="mdl-textfield__expandable-holder">
-            <input className="mdl-textfield__input" type="text" name="sample" id="fixed-header-drawer-exp" value={value} onChange={changehandler}></input>
-	    
-            </div>
-	    </div>)
-}
+import Rx from 'rx';
+import {Nav,Drawer,Body,Menu,Card,SearchField} from './ui_utils';
 
 class Main extends React.Component {
 
@@ -126,7 +10,7 @@ class Main extends React.Component {
 	super(props);
 
 	this.links = [];
-	this.state = { deck : [], cardset: "" }
+	this.state = { deck : [], cardset: "", cardsets: [] }
 	let mythis = this;
 	this.tabs = [{ id: "deck_builder",
 		       label: "Deck Builder",
@@ -134,7 +18,16 @@ class Main extends React.Component {
 		     { id: "card_viewer",
 		       label : "Card Viewer",
 		       content : this.buildCardSet.bind(this) }]
-		     
+
+	
+    }
+
+    componentDidMount() {
+	Cards.getcardsets().subscribe(
+	    data => {
+		this.setState({cardsets:data});
+	    });
+	    
     }
 
     filterCardSet(evt) {
@@ -145,20 +38,20 @@ class Main extends React.Component {
     buildCardSet() {
 	return (<div className="mdl-grid">
 		<div className="mdl-cell mdl-cell--6-col">
-		<Menu menu_id="cardests" items={Cards.getcardsets()} clickhandler={this.updateCardView.bind(this)} />
+		<Menu menu_id="cardests" items={this.state.cardsets} clickhandler={this.updateCardView.bind(this)} />
 		</div>
 		<div className="mdl-cell mdl-cell--6-col">
 		<SearchField value={this.state.cardset_filter} changehandler={this.filterCardSet.bind(this)}/>
 		</div>
 		{( _ => {
-		    if(this.state.cardset) {
+		    if(this.state.cardset && this.state.cardset_coll) {
 			
-			let cardset = Cards.getcardsfromset(this.state.cardset);
+
 			if(this.state.cardset_filter) {
 			    cardset = cardset.filter( card => new RegExp(this.state.cardset_filter).test(card.abilities) );
 			    
 			}
-			return cardset.map(card => {
+			return this.state.cardset_coll.map(card => {
 			    let ownership = Cards.getownership(card.id);
 			    let count = ownership ? ownership.count : 0;
 			    
@@ -175,7 +68,22 @@ class Main extends React.Component {
 
     updateCardView(evt) {
 	let target = evt.target.dataset.id;
-	this.setState({cardset:target});
+	let observable = Cards.getcardsfromset(target);
+	observable
+	    .selectMany(data => {
+		return Rx.Observable.fromArray(data)
+	    })
+	    .selectMany(data => {
+		return Card.getownsership(data.id).map( ownership => {
+		    return Object.assign({}, data, {ownership})
+		})
+	    })
+	    .toArray()
+	    .subscribe(
+		data => {
+		    
+		    this.setState({cardset:target,cardset_coll:data});
+		})
 	
     }
 
@@ -185,10 +93,13 @@ class Main extends React.Component {
 	if(target) {
 	    let deck = this.state.deck;
 	    if(deck) {
-		let card = Cards.getcard(target);
+		let observable = Cards.getcard(target);
 		let c = deck.filter( ({id}) => id === target);
 		if(c.length == 0) {
-		    deck.push(Object.assign({}, card, { count: 1 }));
+		    observable.subscribe(
+			card => {
+			    deck.push(Object.assign({}, card, { count: 1 }));
+			});
 		    this.setState({deck});
 		}
 		else
@@ -393,9 +304,17 @@ class Main extends React.Component {
 	let deck = Deck.getdeck(target);
 	if(deck && deck.deck) {
 	    console.log("setting target to " + target);
-	    let cards = deck.deck.map(({id,count}) => Object.assign({},Cards.getcard(id), {count}));
+	    Rx.Observable.fromArray(deck.deck)
+		.selectMany( ({id,count}) => {
+		    return Card.getcard(id).map(data => Obect.assign({}, data, {count}))
+		})
+		.toArray()
+		.subscribe(
+		    data => {
+			this.setState({deck:data,deck_id:deck.id})
+		    });
 	    
-	    this.setState({deck: cards, deck_id: deck.id});
+								     
 	}
     }
 
