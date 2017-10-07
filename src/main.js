@@ -206,19 +206,19 @@ class Main extends React.Component {
 		    let decks = this.state.decks;
 		    if(decks) {
 			return decks.map( ({id,label}) => {
-			    return (<li data-id={id} className="mdl-list__item" onClick={
-				evt => {
-				    this.updateDeckView(evt);
-				    let dialog = document.querySelector('#deck_settings');
-				    dialog.close();
-				}
- 			    }>
-				    <span className="mdl-list__item-primary-content">
+			    return (<li  className="mdl-list__item" >
+				    <span data-id={id}  className="mdl-list__item-primary-content" onClick={
+					evt => {
+					    this.updateDeckView(evt);
+					    let dialog = document.querySelector('#deck_settings');
+					    dialog.close();
+					}
+ 				    }>
 				    <i className="material-icons mdl-list__item-icon">view_stream</i>
 				    {label}
 				    </span>
 				    <span className="mdl-list__item-secondary-action">
-				    <button className="mdl-button mdl-js-button">
+				    <button data-id={id} className="mdl-button mdl-js-button" onClick={this.deleteDeck.bind(this)}>
 				    Delete
 				    </button>
 				    </span>
@@ -248,6 +248,19 @@ class Main extends React.Component {
 		</button>
 		</div>
 		</dialog>)
+    }
+
+    deleteDeck(evt) {
+	let target = evt.currentTarget.dataset.id;
+	if(target) {
+	    Deck.deleteDeck(target).selectMany(
+		_ => {
+		    return Deck.getdecks();
+		})
+		.subscribe(decks => {
+		    this.setState({ decks })
+		});
+	}
     }
 
     buildDeck() {
@@ -336,7 +349,7 @@ class Main extends React.Component {
     }
 
     updateDeckView(evt) {
-	let target = evt.target.dataset.id;
+	let target = evt.currentTarget.dataset.id;
 
 	if(target) {
 	    let observer = Deck.getdeck(target);

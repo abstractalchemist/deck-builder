@@ -44,8 +44,16 @@ export default (function() {
 //	    });
 	},
 	updatedeck(id,deck) {
-	}
+	},
 
-	
+	deleteDeck(id) {
+	    if(selecteddeck == id)
+		selecteddeck = {};
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/" + id}))
+		.map(JSON.parse)
+		.selectMany(({_rev,_id}) => {
+		    return Rx.Observable.fromPromise(Http({method:"DELETE",url:"/api/decks/"+id+"?rev=" + _rev}))
+		});
+	}
     };
 })()
