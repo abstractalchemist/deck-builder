@@ -33,8 +33,14 @@ class Main extends React.Component {
 		this.setState({decks:data});
 	    })
 	    
+
+
     }
 
+    componentDidUpdate() {
+	componentHandler.upgradeDom();
+    }
+    
     filterCardSet(evt) {
 	this.setState({cardset_filter:evt.target.value});
 	
@@ -51,19 +57,22 @@ class Main extends React.Component {
 		{( _ => {
 		    if(this.state.cardset && this.state.cardset_coll) {
 			
-
+			let cardset = this.state.cardset_coll;
 			if(this.state.cardset_filter) {
-			    cardset = cardset.filter( card => new RegExp(this.state.cardset_filter).test(card.abilities) );
+			    let re = new RegExp(this.state.cardset_filter);
+			    cardset = cardset.filter( card => {
+
+				return re.test(card.abilities) || re.test(card.number) || re.test(card.name);
+			    });
 			    
 			}
-			return this.state.cardset_coll.map(card => {
-
+			return cardset.map(card => {
+			    
 
 			    let count = card.ownership.count == 0 ? card.ownership.price : card.ownership.count;
 			    
 			    return (<div className="mdl-cell mdl-cell--3-col">
 				    <Card {...card} addhandler={this.addCardToDeck.bind(this)} count={count}>
-				    
 				    </Card>
 				    </div>)
 			})
@@ -96,13 +105,23 @@ class Main extends React.Component {
 	if(target) {
 	    let deck = this.state.deck;
 	    if(deck) {
-		let observable = Cards.getcard(target);
+		let observable = Cards.getcard(target)
+		    .selectMany(card => {
+			if(card.relatedTo) {
+			    return Cards.getcard(card.relatedTo).map(relation => {
+				return { card,relation}
+			    });
+			}
+			else
+			    return Rx.Observable.just({card:card});
+		    });
 		let c = deck.filter( ({id}) => id === target);
 		if(c.length == 0) {
 		    observable.subscribe(
-			card => {
+			({card,relation}) => {
 			    deck.push(Object.assign({}, card, { count: 1 }));
-			    
+			    if(relation)
+				alert("added card is related to " + relation.name);
 			    this.setState({deck});
 			    //document.querySelector("#deck_builder_tab").classList.add("is-active");
 			    //document.querySelector("#deck_builder").classList.add("is-active");
@@ -267,7 +286,7 @@ class Main extends React.Component {
 
 	let levelcalculator = lvl => {
 	    if(this.state.deck)
-		return this.state.deck.filter( ({ level }) => level === lvl).length
+		return this.state.deck.filter( ({ level }) => parseInt(level) === lvl).length
 	}
 	return (<div className="mdl-grid">
 		<div className="mdl-cell mdl-cell--12-col">
@@ -286,7 +305,10 @@ class Main extends React.Component {
 		    evt => {
 			Deck.updatedeck(this.state.deck_id, this.state.deck).subscribe(
 			    _ => {
-				console.log("save successful");
+				alert("save successful");
+			    },
+			    err => {
+				alert("Error: " + err);
 			    });
 		    }
 		}>
@@ -335,18 +357,39 @@ class Main extends React.Component {
 		{( _ => {
 		    if(this.state.deck) {
 			console.log("building deck view");
-			return this.state.deck.map(card => {
-			    return (<div className="mdl-cell mdl-cell--3-col">
-				    <Card {...card} addhandler={this.updateCardCount.bind(this)} removehandler={this.removeCardFromDeck.bind(this)}/>
-				    </div>)
-			});
+			let filterFunc = (lvl) => {
+			    let cards =this.state.deck
+				.filter(({level}) => parseInt(level) === lvl)
+				.map(card => {
+				    return (<div className="mdl-cell mdl-cell--3-col">
+					    <Card {...card} addhandler={this.updateCardCount.bind(this)} removehandler={this.removeCardFromDeck.bind(this)}/>
+					    </div>)
+				})
+			    let rem = cards.length % 4;
+			    let gen = 4 - rem;
+			    while(rem !=0 && gen > 0) {
+				cards.push(<div className="mdl-cell mdl-cell--3-col">
+					    <Card />
+					   </div>)
+				gen --;
+			    }
+			    return cards;
+			}
+			return [].concat(
+			    filterFunc(3),
+			    filterFunc(2),
+			    filterFunc(1),
+			    filterFunc(0));
+			
+			
 		    }
 		})()
 		}
 		
 		</div>)
-		
-    }
+	
+    }	
+    
 
     updateDeckView(evt) {
 	let target = evt.currentTarget.dataset.id;

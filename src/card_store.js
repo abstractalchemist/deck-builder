@@ -19,8 +19,12 @@ export default (function() {
 
 	// get a card based on id
 	getcard(card_id) {
-	    //return Rx.Observable.fromArray(testing.filter(({id}) => card_id === id));
-	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/" + selecteddb + "/" + card_id})).map(JSON.parse).map(obj => Object.assign({},obj, {id:obj._id}));
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/cardmapping/mapping"}))
+		.map(JSON.parse)
+		.selectMany(({mapping}) => {
+		    let db = mapping.find(({prefix}) => card_id.startsWith(prefix));
+		    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/" + db.db + "/" + card_id})).map(JSON.parse).map(obj => Object.assign({},obj, {id:obj._id}));
+		})
 	},
 
 	// get all cards from a card set id

@@ -43,7 +43,20 @@ export default (function() {
 //		observer.onCompleted();
 //	    });
 	},
+	
 	updatedeck(id,deck) {
+	    let reduced = deck.map(({id,count}) => {
+		return {id,count}
+	    })
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/" + id}))
+		.map(JSON.parse)
+		.selectMany( ({ _rev, _id, label}) => {
+		    return Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/decks/" + id},
+							  JSON.stringify({
+							      deck: reduced,
+							      label: label,
+							      _rev:_rev})))
+		})
 	},
 
 	deleteDeck(id) {
