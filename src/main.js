@@ -71,7 +71,7 @@ class Main extends React.Component {
 
 			    let count = card.ownership.count == 0 ? card.ownership.price : card.ownership.count;
 			    
-			    return (<div className="mdl-cell mdl-cell--3-col">
+			    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth: "300px" }}>
 				    <Card {...card} addhandler={this.addCardToDeck.bind(this)} count={count}>
 				    </Card>
 				    </div>)
@@ -286,7 +286,7 @@ class Main extends React.Component {
 
 	let levelcalculator = lvl => {
 	    if(this.state.deck)
-		return this.state.deck.filter( ({ level }) => parseInt(level) === lvl).length
+		return this.state.deck.filter( ({ level }) => parseInt(level) === lvl).map(({count}) => count).reduce((sum,value) => sum + value, 0);
 	}
 	return (<div className="mdl-grid">
 		<div className="mdl-cell mdl-cell--12-col">
@@ -330,6 +330,9 @@ class Main extends React.Component {
 		<th>
 		Level 0
 		</th>
+		<th>
+		Total
+		</th>
 		</tr>
 		</thead>
 		<tbody>
@@ -342,6 +345,9 @@ class Main extends React.Component {
 		<td>{levelcalculator(1)}
 		</td>
 		<td>{levelcalculator(0)}
+		</td>
+		<td>
+		{this.state.deck.map(({count}) => count).reduce((sum,value) => sum + value,0)}
 		</td>
 		</tr>
 		</tbody>
@@ -361,7 +367,7 @@ class Main extends React.Component {
 			    let cards =this.state.deck
 				.filter(({level}) => parseInt(level) === lvl)
 				.map(card => {
-				    return (<div className="mdl-cell mdl-cell--3-col">
+				    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth:"300px" }}>
 					    <Card {...card} addhandler={this.updateCardCount.bind(this)} removehandler={this.removeCardFromDeck.bind(this)}/>
 					    </div>)
 				})
