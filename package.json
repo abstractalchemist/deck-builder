@@ -12,8 +12,8 @@
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
     "rx": "^4.1.0",
-    "utils": "git+ssh://git@github.com/abstractalchemist/utils.git",
-    "ui-utils": "git+ssh://git@github.com/abstractalchemist/ui-utils.git"
+    "utils": "git+ssh://git@github.com/abstractalchemist/utils.git#v0.0.0.1",
+    "ui-utils": "git+ssh://git@github.com/abstractalchemist/ui-utils.git#v0.0.0.1"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

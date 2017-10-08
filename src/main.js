@@ -4,13 +4,25 @@ import Cards from './card_store';
 import Rx from 'rx';
 import {Nav,Drawer,Body,Menu,Card,SearchField} from 'ui-utils';
 
+/*
+ * state attributes
+ * - deck - list of cards to display in deck view
+ * - cardset - the id of the cardset to view in card set view
+ * - cardsets - the list of all known cardsets 
+ * - flush_display - if true, display all cards together;  otherwise split by level
+ * - cardset_filter - the current expression to filter the card set view on
+ * - cardset_coll - the list of cards to view in the cardset, maybe modified by the filter
+ * - deck_input_name - name of the deck currently being viewed
+ * - deck_id - id of the deck currently being viewed ( in the database )
+ */
+
 class Main extends React.Component {
 
     constructor(props) {
 	super(props);
 
 	this.links = [];
-	this.state = { deck : [], cardset: "", cardsets: [] }
+	this.state = { deck : [], cardset: "", cardsets: [], flush_display : true }
 	let mythis = this;
 	this.tabs = [{ id: "deck_builder",
 		       label: "Deck Builder",
@@ -71,7 +83,7 @@ class Main extends React.Component {
 
 			    let count = card.ownership.count == 0 ? card.ownership.price : card.ownership.count;
 			    
-			    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth: "300px" }}>
+			    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth: "250px" }}>
 				    <Card {...card} addhandler={this.addCardToDeck.bind(this)} count={count}>
 				    </Card>
 				    </div>)
@@ -100,7 +112,7 @@ class Main extends React.Component {
     }
 
     addCardToDeck(evt) {
-	let target = evt.target.dataset.id;
+	let target = evt.currentTarget.dataset.id;
 	console.log("adding " + target + " to deck");
 	if(target) {
 	    let deck = this.state.deck;
@@ -286,7 +298,12 @@ class Main extends React.Component {
 
 	let levelcalculator = lvl => {
 	    if(this.state.deck)
-		return this.state.deck.filter( ({ level }) => parseInt(level) === lvl).map(({count}) => count).reduce((sum,value) => sum + value, 0);
+		return this.state.deck.filter( ({ level,rarity }) => !rarity.startsWith("C") && (parseInt(level) === lvl)).map(({count}) => count).reduce((sum,value) => sum + value, 0);
+	}
+	let climaxcalculator = _ => {
+	    if(this.state.deck) {
+		return this.state.deck.filter(({ rarity }) => rarity.startsWith("C")).map(({count}) => count).reduce( (sum,value) => sum + value, 0);
+	    }
 	}
 	return (<div className="mdl-grid">
 		<div className="mdl-cell mdl-cell--12-col">
@@ -331,6 +348,9 @@ class Main extends React.Component {
 		Level 0
 		</th>
 		<th>
+		Climax Cards
+		</th>
+		<th>
 		Total
 		</th>
 		</tr>
@@ -346,16 +366,26 @@ class Main extends React.Component {
 		</td>
 		<td>{levelcalculator(0)}
 		</td>
+		<td>{climaxcalculator()}
+		</td>
 		<td>
 		{this.state.deck.map(({count}) => count).reduce((sum,value) => sum + value,0)}
 		</td>
 		</tr>
 		</tbody>
 		</table>
-		<div className="mdl-textfield mdl-js-textfield" style={{display:"inline-block"}}>
+		<div className="mdl-textfield mdl-js-textfield">
 		<label htmlFor="deck_label" className="mdl-textfield__label">{this.state.deck_name}</label>
 		<input id="deck_label" className="mdl-textfield__input"></input>
 		</div>
+		<label className="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" htmlFor="checkbox-1">
+		<input type="checkbox" id="checkbox-1" className="mdl-checkbox__input" checked={!this.state.flush_display} onClick={
+		    evt => {
+			this.setState({flush_display:!evt.currentTarget.checked});
+		    }
+		}></input>
+		<span className="mdl-checkbox__label">Split On Level</span>
+		</label>
 		</div>
 		{this.buildDialog()}
 		{this.buildNameDialog()}
@@ -365,27 +395,31 @@ class Main extends React.Component {
 			console.log("building deck view");
 			let filterFunc = (lvl) => {
 			    let cards =this.state.deck
-				.filter(({level}) => parseInt(level) === lvl)
+				.filter(({level,rarity}) => !rarity.startsWith("C") && parseInt(level) === lvl)
 				.map(card => {
 				    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth:"300px" }}>
 					    <Card {...card} addhandler={this.updateCardCount.bind(this)} removehandler={this.removeCardFromDeck.bind(this)}/>
 					    </div>)
 				})
-			    let rem = cards.length % 4;
-			    let gen = 4 - rem;
-			    while(rem !=0 && gen > 0) {
-				cards.push(<div className="mdl-cell mdl-cell--3-col">
-					    <Card />
-					   </div>)
-				gen --;
-			    }
+			    if(!this.state.flush_display)
+				cards.push(<div className="mdl-cell" style={{width:"100%"}}/>);
 			    return cards;
 			}
+			let climaxCards = _ => {
+			    return this.state.deck.filter( ({ rarity }) => rarity.startsWith("C"))
+				.map(card => {
+				    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth:"300px" }}>
+					    <Card {...card} addhandler={this.updateCardCount.bind(this)} removehandler={this.removeCardFromDeck.bind(this)}/>
+					    </div>)
+				})
+			}
+					    
 			return [].concat(
 			    filterFunc(3),
 			    filterFunc(2),
 			    filterFunc(1),
-			    filterFunc(0));
+			    filterFunc(0),
+			    climaxCards());
 			
 			
 		    }
