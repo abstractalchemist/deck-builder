@@ -66,6 +66,7 @@ class Main extends React.Component {
 		<div className="mdl-cell mdl-cell--6-col">
 		<SearchField value={this.state.cardset_filter} changehandler={this.filterCardSet.bind(this)}/>
 		</div>
+		
 		{( _ => {
 		    if(this.state.cardset && this.state.cardset_coll) {
 			
@@ -84,7 +85,18 @@ class Main extends React.Component {
 			    let count = card.ownership.count == 0 ? card.ownership.price : card.ownership.count;
 			    
 			    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth: "250px" }}>
-				    <Card {...card} addhandler={this.addCardToDeck.bind(this)} count={count}>
+				    <Card {...card} addhandler={this.addCardToDeck.bind(this)} count={count} menuOpts={[{id:'tcgrepublic',label:'Search TCG Republic'}]} menuHandler={
+					evt => {
+					    let target = evt.currentTarget.dataset.id;
+					    if(target === 'tcgrepublic')
+						
+						window.open("https://tcgrepublic.com/product/text_search.html?q=" + encodeURIComponent(card.number));
+					}
+				    }>
+				    {(_ => {
+					if(card.abilities)
+ 					    return card.abilities.map( text => <p style={{fontSize:"10px",lineHeight:"12px"}}>{text}</p>)
+				    })()}
 				    </Card>
 				    </div>)
 			})
@@ -152,7 +164,7 @@ class Main extends React.Component {
     }
 
     updateCardCount(evt) {
-	let target = evt.target.dataset.id;
+	let target = evt.currentTarget.dataset.id;
 	if(target) {
 	    let deck = this.state.deck;
 	    let index = deck.findIndex( ({id}) => id === target);
@@ -294,15 +306,29 @@ class Main extends React.Component {
 	}
     }
 
+    generateCard(addHandler, removeHandler) {
+	return function(card) {
+	    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth:"300px" }}>
+		    <Card {...card} addhandler={addHandler} removehandler={removeHandler}>
+		    {(_ => {
+			if(card.abilities)
+ 			    return card.abilities.map( text => <p style={{fontSize:"10px",lineHeight:"12px"}}>{text}</p>)
+		    })()}
+		    
+		    </Card>
+		    </div>)
+	}
+    }
+    
     buildDeck() {
 
 	let levelcalculator = lvl => {
 	    if(this.state.deck)
-		return this.state.deck.filter( ({ level,rarity }) => !rarity.startsWith("C") && (parseInt(level) === lvl)).map(({count}) => count).reduce((sum,value) => sum + value, 0);
+		return this.state.deck.filter( ({ level,rarity }) => !/C[A-Z]/.test(rarity) && (parseInt(level) === lvl)).map(({count}) => count).reduce((sum,value) => sum + value, 0);
 	}
 	let climaxcalculator = _ => {
 	    if(this.state.deck) {
-		return this.state.deck.filter(({ rarity }) => rarity.startsWith("C")).map(({count}) => count).reduce( (sum,value) => sum + value, 0);
+		return this.state.deck.filter(({ rarity }) => /C[A-Z]/.test(rarity)).map(({count}) => count).reduce( (sum,value) => sum + value, 0);
 	    }
 	}
 	return (<div className="mdl-grid">
@@ -391,27 +417,21 @@ class Main extends React.Component {
 		{this.buildNameDialog()}
 
 		{( _ => {
+
+		    
 		    if(this.state.deck) {
 			console.log("building deck view");
 			let filterFunc = (lvl) => {
 			    let cards =this.state.deck
-				.filter(({level,rarity}) => !rarity.startsWith("C") && parseInt(level) === lvl)
-				.map(card => {
-				    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth:"300px" }}>
-					    <Card {...card} addhandler={this.updateCardCount.bind(this)} removehandler={this.removeCardFromDeck.bind(this)}/>
-					    </div>)
-				})
+				.filter(({level,rarity}) => !/C[A-Z]/.test(rarity) && parseInt(level) === lvl)
+				.map(this.generateCard(this.updateCardCount.bind(this), this.removeCardFromDeck.bind(this)));
 			    if(!this.state.flush_display)
 				cards.push(<div className="mdl-cell" style={{width:"100%"}}/>);
 			    return cards;
 			}
 			let climaxCards = _ => {
-			    return this.state.deck.filter( ({ rarity }) => rarity.startsWith("C"))
-				.map(card => {
-				    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth:"300px" }}>
-					    <Card {...card} addhandler={this.updateCardCount.bind(this)} removehandler={this.removeCardFromDeck.bind(this)}/>
-					    </div>)
-				})
+			    return this.state.deck.filter( ({ rarity }) => /C[A-Z]/.test(rarity))
+				.map(this.generateCard(this.updateCardCount.bind(this), this.removeCardFromDeck.bind(this)))
 			}
 					    
 			return [].concat(
