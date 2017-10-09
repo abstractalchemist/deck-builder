@@ -84,6 +84,7 @@ class Main extends React.Component {
 
 			    let count = card.ownership.count == 0 ? card.ownership.price : card.ownership.count;
 			    
+			    
 			    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth: "250px" }}>
 				    <Card {...card} addhandler={this.addCardToDeck.bind(this)} count={count} menuOpts={[{id:'tcgrepublic',label:'Search TCG Republic'}]} menuHandler={
 					evt => {

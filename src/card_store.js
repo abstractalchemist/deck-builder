@@ -12,8 +12,8 @@ export default (function() {
 
 	getownership(card_id) {
 	    return Rx.Observable.create(observer => {
-		observer.onNext({ count: 0, price: "1.00" });
-		observer.onCompleted();
+	     	observer.onNext({ count: 0, price: "1.00" });
+	     	 observer.onCompleted();
 	    })
 	},
 
