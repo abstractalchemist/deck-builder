@@ -109,17 +109,26 @@ class Main extends React.Component {
     updateCardView(evt) {
 	let target = evt.target.dataset.id;
 	let observable = Cards.getcardsfromset(target);
+	let buffer = [];
 	observable
 	    .selectMany(data => {
-		return Cards.getownership(data.id).map( ownership => {
+		return Cards.getownership(data.number)
+		    .map( ownership => {
 		    return Object.assign({}, data, {ownership})
 		})
 	    })
-	    .toArray()
 	    .subscribe(
 		data => {
+		    buffer.push(data);
 		    
-		    this.setState({cardset:target,cardset_coll:data});
+		},
+		err => {
+		    //alert("Price check error: ")
+		    console.log(`error ${err}`);
+		},
+		_ => {
+		    console.log('update card view');
+		    this.setState({cardset:target,cardset_coll:buffer});
 		})
 	
     }

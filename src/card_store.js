@@ -11,10 +11,16 @@ export default (function() {
     return {
 
 	getownership(card_id) {
-	    return Rx.Observable.create(observer => {
-	     	observer.onNext({ count: 0, price: "1.00" });
-	     	 observer.onCompleted();
-	    })
+	    return Rx.Observable.fromPromise(Http({method:"GET", url:"/api-dyn/price/" + card_id}))
+		.catch(err => Rx.Observable.just("No Price found"))
+	    	.map(price => {
+	    	    return { count: 0, price }
+	    	});
+	
+	    // return Rx.Observable.create(observer => {
+	    //  	observer.onNext({ count: 0, price: "1.00" });
+	    //  	 observer.onCompleted();
+	    // })
 	},
 
 	// get a card based on id
