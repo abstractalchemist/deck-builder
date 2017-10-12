@@ -28,7 +28,18 @@ export default (function() {
 	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/cardmapping/mapping"}))
 		.map(JSON.parse)
 		.selectMany(({mapping}) => {
-		    let db = mapping.find(({prefix}) => card_id.startsWith(prefix));
+		    //		    let db = mapping.find(({prefix}) => card_id.startsWith(prefix));
+		    let matching_dbs = mapping.filter( ({ prefix }) => card_id.startsWith(prefix));
+		    let max = -1
+		    let max_index = -1;
+		    
+		    matching_dbs.forEach(i,j => {
+			if(i.length > max) {
+			    max = i.length;
+			    max_index = j;
+			}
+		    })
+		    let db = mapping[max_index];
 		    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/" + db.db + "/" + card_id})).map(JSON.parse).map(obj => Object.assign({},obj, {id:obj._id}));
 		})
 	},

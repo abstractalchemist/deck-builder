@@ -82,10 +82,10 @@ class Main extends React.Component {
 			return cardset.map(card => {
 			    
 
-			    let count = card.ownership.count == 0 ? card.ownership.price : card.ownership.count;
+			    let count = card.ownership ? ( card.ownership.count == 0 ? card.ownership.price : card.ownership.count ) : "No Info";
 			    
 			    
-			    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth: "250px" }}>
+			    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth: "250px" }} key={card.number}>
 				    <Card {...card} addhandler={this.addCardToDeck.bind(this)} count={count} menuOpts={[{id:'tcgrepublic',label:'Search TCG Republic'}]} menuHandler={
 					evt => {
 					    let target = evt.currentTarget.dataset.id;
@@ -95,7 +95,7 @@ class Main extends React.Component {
 					}
 				    }>
 				    {(_ => {
-					if(card.abilities)
+ 					if(card.abilities)
  					    return card.abilities.map( text => <p style={{fontSize:"10px",lineHeight:"12px"}}>{text}</p>)
 				    })()}
 				    </Card>
@@ -110,26 +110,59 @@ class Main extends React.Component {
 	let target = evt.target.dataset.id;
 	let observable = Cards.getcardsfromset(target);
 	let buffer = [];
-	observable
-	    .selectMany(data => {
-		return Cards.getownership(data.number)
-		    .map( ownership => {
-		    return Object.assign({}, data, {ownership})
-		})
+	if(this.cardViewRetrieveHandle) {
+	    this.cardViewRetrieveHandle.dispose();
+	}
+	if(this.ownershipRetrieveHandle) {
+	    this.ownershipRetrieveHandle.dispose();
+	}
+	this.cardViewRetrieveHandle = observable.subscribe(
+	    data => buffer.push(data),
+	    err => {
+		console.log(`error ${err}`);
+	    },
+	    _ => {
+		console.log('update card view');
+		this.setState({cardset:target,cardset_coll:buffer});
+		let buffer2 = [];
+		this.ownershipRetrieveHandle = Rx.Observable.fromArray(buffer)
+		    .selectMany(data => {
+			return Cards.getownership(data.number)
+			    .map(ownership => Object.assign({}, data, {ownership}))
+		    })
+		    .subscribe(
+			data => {
+			    let index = this.state.cardset_coll.findIndex( ({ id }) => data.id === id);
+			    let ptr = this.state.cardset_coll.map(o => o);
+			    if(index >= 0) {
+				ptr[index] = data;
+				this.setState({cardset_coll:ptr});
+			    }
+			},
+			err => {
+			    console.log(`error ${err}`);
+			})
 	    })
-	    .subscribe(
-		data => {
-		    buffer.push(data);
+	// observable
+	//     .selectMany(data => {
+	// 	return Cards.getownership(data.number)
+	// 	    .map( ownership => {
+	// 	    return Object.assign({}, data, {ownership})
+	// 	})
+	//     })
+	//     .subscribe(
+	// 	data => {
+	// 	    buffer.push(data);
 		    
-		},
-		err => {
-		    //alert("Price check error: ")
-		    console.log(`error ${err}`);
-		},
-		_ => {
-		    console.log('update card view');
-		    this.setState({cardset:target,cardset_coll:buffer});
-		})
+	// 	},
+	// 	err => {
+	// 	    //alert("Price check error: ")
+	// 	    console.log(`error ${err}`);
+	// 	},
+	// 	_ => {
+	// 	    console.log('update card view');
+	// 	    this.setState({cardset:target,cardset_coll:buffer});
+	// 	})
 	
     }
 
