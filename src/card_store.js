@@ -33,7 +33,7 @@ export default (function() {
 		    let max = -1
 		    let max_index = -1;
 		    
-		    matching_dbs.forEach(i,j => {
+		    matching_dbs.forEach((i,j) => {
 			if(i.length > max) {
 			    max = i.length;
 			    max_index = j;
