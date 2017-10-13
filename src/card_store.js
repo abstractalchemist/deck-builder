@@ -33,9 +33,9 @@ export default (function() {
 		    let max = -1
 		    let max_index = -1;
 		    
-		    matching_dbs.forEach((i,j) => {
-			if(i.length > max) {
-			    max = i.length;
+		    matching_dbs.forEach(({prefix},j) => {
+			if(prefix.length > max) {
+			    max = prefix.length;
 			    max_index = j;
 			}
 		    })
