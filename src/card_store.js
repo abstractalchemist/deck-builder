@@ -39,7 +39,7 @@ export default (function() {
 			    max_index = j;
 			}
 		    })
-		    let db = mapping[max_index];
+		    let db = matching_dbs[max_index];
 		    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/" + db.db + "/" + card_id})).map(JSON.parse).map(obj => Object.assign({},obj, {id:obj._id}));
 		})
 	},
