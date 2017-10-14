@@ -1,0 +1,5 @@
+#!/bin/bash
+
+docker network create deck-building
+docker run --network=deck-building -v $(pwd)/default.conf:/etc/nginx/conf.d/default.conf -v $(pwd)/build:/www -d -p 8080:80 --name server nginx
+docker run --network=deck-building -d --name deck-builder -p 5984:5984 couchdb
