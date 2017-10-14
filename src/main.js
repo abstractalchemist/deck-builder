@@ -182,6 +182,8 @@ class Main extends React.Component {
 					    if(target === 'tcgrepublic')
 						
 						window.open("https://tcgrepublic.com/product/text_search.html?q=" + encodeURIComponent(card.number));
+					    else if(target === 'tcgplayer')
+						window.open("https://www.google.com/search?q=" + encodeURIComponent("site:shop.tcgplayer.com \"" + card.number + "\" -\"Price Guide\""))
 					}
 				    }>
 				    {(_ => {
