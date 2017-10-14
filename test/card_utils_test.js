@@ -6,7 +6,7 @@ import { CardSetView, CardSetNameView, Checkbox, NameDialog, DeckSettingsDialog,
 
 describe('<CardSetView>', function() {
     it('init', function() {
-	const obj = mount(<CardSetView cardset={[{},{},{},{},{},{}]} cardset_filter="" filter_to_deck={false} deck={[]} addhandler={
+	const obj = mount(<CardSetView cardset_coll={[{},{},{},{},{},{}]} cardset_filter="" filter_to_deck={false} deck={[]} addhandler={
 	    _ => {
 	    }
 	}
@@ -19,7 +19,7 @@ describe('<CardSetView>', function() {
     })
 
     it('filter', function() {
-	const obj = mount(<CardSetView cardset={[{abilities:["filter this"]},{},{},{},{},{}]} cardset_filter="filter" filter_to_deck={false} deck={[]} addhandler={
+	const obj = mount(<CardSetView cardset_coll={[{abilities:["filter this"]},{},{},{},{},{}]} cardset_filter="filter" filter_to_deck={false} deck={[]} addhandler={
 	    _ => {
 	    }
 	}
@@ -33,7 +33,7 @@ describe('<CardSetView>', function() {
     })
 
     it('filter to deck', function() {
-	const obj = mount(<CardSetView cardset={[{id:1},{id:2},{id:3},{id:4},{id:5},{id:6}]} cardset_filter="" filter_to_deck={true} deck={[{id:1}]} addhandler={
+	const obj = mount(<CardSetView cardset_coll={[{id:1},{id:2},{id:3},{id:4},{id:5},{id:6}]} cardset_filter="" filter_to_deck={true} deck={[{id:1}]} addhandler={
 	    _ => {
 	    }
 	}

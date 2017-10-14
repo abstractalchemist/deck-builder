@@ -47,15 +47,19 @@ class Main extends React.Component {
 	Cards.addtocollection(target)
 	    .selectMany(_ => Cards.getcard(target))
 	    .selectMany(data =>  Cards.getownership(number).map(o => Object.assign({}, {ownership:o}, data)))
-	    .subscribe(o => {
-		let ptr = this.state.cardset_coll.map(j => {
-		    if(j.id === o.id)
-			return o
-		    return j;
-		});
-		this.setState({cardset_coll:ptr});
-		
-	    })
+	    .subscribe(
+		o => {
+		    let ptr = this.state.cardset_coll.map(j => {
+			if(j.id === o.id)
+			    return o
+			return j;
+		    });
+		    this.setState({cardset_coll:ptr});
+		    
+		},
+		err => {
+		    alert(`ownership update error ${err}`);
+		})
 			    
 								 
     }
@@ -147,18 +151,20 @@ class Main extends React.Component {
 		    })
 		    .subscribe(
 			data => {
-			    let index = this.state.cardset_coll.findIndex( ({ id }) => data.id === id);
-			    let ptr = this.state.cardset_coll.map(o => o);
-			    if(index >= 0) {
-				ptr[index] = data;
-				this.setState({cardset_coll:ptr});
-			    }
+			    buffer2.push(data);
+			    // let index = this.state.cardset_coll.findIndex( ({ id }) => data.id === id);
+			    // let ptr = this.state.cardset_coll.map(o => o);
+			    // if(index >= 0) {
+			    // 	ptr[index] = data;
+			    // 	this.setState({cardset_coll:ptr});
+			    // }
 			},
 			err => {
 			    console.log(`error ${err}`);
 			},
 			_ => {
-			    this.setState({is_building:undefined});
+			    
+			    this.setState({is_building:undefined,cardset_coll:buffer2});
 			})
  	    })
 	

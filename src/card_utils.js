@@ -35,7 +35,8 @@ function Checkbox({clickhandler,label}) {
 
 }
 
-function CardSetView({cardset,cardset_filter,filter_to_deck,deck,addhandler,addhandler2}) {
+function CardSetView({cardset_coll,cardset_filter,filter_to_deck,deck,addhandler,addhandler2}) {
+    let cardset = cardset_coll;
     if(cardset_filter) {
 	let re = new RegExp(cardset_filter);
 	cardset = cardset.filter( card => {
