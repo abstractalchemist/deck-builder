@@ -1,0 +1,11 @@
+#!/bin/bash
+
+TAG=v0.0.0.2
+
+git checkout $TAG
+git stash pop
+npm i
+docker build -t abstractalchemist/deck-builder -f Dockerfile .
+docker push abstractalchemist/deck-builder
+sleep 10s
+docker service update --image abstractalchemist/deck-builder deck-builder
