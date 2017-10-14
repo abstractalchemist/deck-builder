@@ -35,6 +35,26 @@ class Main extends React.Component {
 	
     }
 
+    updateOwnership(evt) {
+	console.log(`updating ownership of ${evt.currentTarget.dataset.id}`);
+	let target = evt.currentTarget.dataset.id;
+	let number = evt.currentTarget.dataset.number;
+	Cards.addtocollection(target)
+	    .selectMany(_ => Cards.getcard(target))
+	    .selectMany(data =>  Cards.getownership(number).map(o => Object.assign({}, {ownership:o}, data)))
+	    .subscribe(o => {
+		let ptr = this.state.cardset_coll.map(j => {
+		    if(j.id === o.id)
+			return o
+		    return j;
+		});
+		this.setState({cardset_coll:ptr});
+		
+	    })
+			    
+								 
+    }
+
     componentDidMount() {
 	Cards.getcardsets().subscribe(
 	    data => {
@@ -114,6 +134,15 @@ class Main extends React.Component {
 		</div>
 		<div className="mdl-cell mdl-cell--6-col">
 		<SearchField value={this.state.cardset_filter} changehandler={this.filterCardSet.bind(this)}/>
+		<label className="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" htmlFor="filter-in-deck">
+		<input type="checkbox" id="filter-in-deck" className="mdl-checkbox__input" onClick={
+		    evt => {
+			this.setState({filter_to_deck:evt.currentTarget.checked})
+			
+		    }
+		}></input>
+		<span className="mdl-checkbox__label">Filter On Deck</span>
+		</label>
 		</div>
 		
 		{( _ => {
@@ -128,6 +157,11 @@ class Main extends React.Component {
 			    });
 			    
 			}
+			if(this.state.filter_to_deck && this.state.deck) {
+			    cardset = cardset.filter( ({id}) => {
+				return this.state.deck.filter( ({id:deck_id}) => deck_id === id).length > 0;
+			    })
+			}
 			return cardset.map(card => {
 			    
 
@@ -140,7 +174,7 @@ class Main extends React.Component {
 				}
 			    }
 			    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth: "250px" }} key={card.number}>
-				    <Card {...card} {...props} count={count} menuOpts={[{id:'tcgrepublic',label:'Search TCG Republic'},{id:'tcgplayer',label:'Search TCG Player'}]} menuHandler={
+				    <Card {...card} {...props} count={count} addhandler2={this.updateOwnership.bind(this)} menuOpts={[{id:'tcgrepublic',label:'Search TCG Republic'},{id:'tcgplayer',label:'Search TCG Player'}]} menuHandler={
 					evt => {
 					    let target = evt.currentTarget.dataset.id;
 					    if(target === 'tcgrepublic')

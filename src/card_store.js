@@ -10,12 +10,23 @@ export default (function() {
     let selecteddb;
     return {
 
+	addtocollection(card_id) {
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/library/" + card_id}))
+		.map(JSON.parse)
+		.selectMany(({count,_rev}) => {
+		    return Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/library/" + card_id}, JSON.stringify({count:count+1,_rev})))
+		})
+		.catch(Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/library/" + card_id}, JSON.stringify({count:1}))));
+	},
+	
 	getownership(card_id) {
-	    return Rx.Observable.fromPromise(Http({method:"GET", url:"/api-dyn/price/" + card_id}))
-		.catch(err => Rx.Observable.just("No Price found"))
-	    	.map(price => {
-	    	    return { count: 0, price }
-	    	});
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/library/" + card_id.toLowerCase().replace(/\/|-/g,"_")}))
+		.map(JSON.parse)
+		.catch(Rx.Observable.fromPromise(Http({method:"GET", url:"/api-dyn/price/" + card_id}))
+		       .catch(err => Rx.Observable.just("No Price found"))
+	    	       .map(price => {
+	    		   return { count: 0, price }
+	    	       }));
 	
 	    // return Rx.Observable.create(observer => {
 	    //  	observer.onNext({ count: 0, price: "1.00" });
