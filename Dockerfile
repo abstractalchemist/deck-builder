@@ -12,6 +12,6 @@ RUN apk update --no-cache && \
 
 WORKDIR /www
 EXPOSE 80
-COPY default.conf /etc/nginx/conf.d
+COPY default-arm.conf /etc/nginx/conf.d/default.conf
 ADD build /www
 CMD ["nginx","-g","daemon off;"]
