@@ -9,4 +9,4 @@ gulp js
 docker build -t abstractalchemist/deck-builder -f Dockerfile .
 docker push abstractalchemist/deck-builder
 sleep 10s
-docker service update --image abstractalchemist/deck-builder deck-builder
+docker service update --detach=false --image abstractalchemist/deck-builder deck-builder
