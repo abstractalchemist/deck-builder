@@ -7,7 +7,8 @@ import {Nav,Drawer,Body,Menu,Card,SearchField} from 'ui-utils';
 /*
  * state attributes
  * - deck - list of cards to display in deck view
- * - cardset - the id of the cardset to view in card set view
+ * - cardset - the ids of the cardset to view in card set view
+ * - is_building - if this property is set, then information is still being collected
  * - cardsets - the list of all known cardsets 
  * - flush_display - if true, display all cards together;  otherwise split by level
  * - cardset_filter - the current expression to filter the card set view on
@@ -45,7 +46,7 @@ class Main extends React.Component {
 		this.setState({decks:data});
 	    })
 	    
-
+//	document.querySelectorAll("table > input
 
     }
 
@@ -61,7 +62,55 @@ class Main extends React.Component {
     buildCardSet() {
 	return (<div className="mdl-grid">
 		<div className="mdl-cell mdl-cell--6-col">
-		<Menu menu_id="cardests" items={this.state.cardsets} clickhandler={this.updateCardView.bind(this)} />
+		{( _ => {
+		    const maxRows = 5;
+		    if(this.state.cardsets) {
+			let i = 0;
+			let tables = [];
+			while(i < this.state.cardsets.length) {
+			    let slice = this.state.cardsets.slice(i, i+ maxRows);
+			    tables.push((_ => {
+				return (<table className="mdl-data-table mdl-js-data-table mdl-data-table--selectable" style={{display:"inline-block",marginLeft:"1rem",marginRight:"1rem"}}>
+					<thead>
+					<tr>
+					<th className="mdl-data-table__cell--non-numeric">Set Name</th>
+					</tr>
+					</thead>
+					<tbody>
+					{( _ => {
+					    let rows = slice.map(o => {
+						
+						return (<tr>
+							<td className="mdl-data-table__cell--non-numeric" data-id={o.id}>{o.label}</td>
+							</tr>)
+					    })
+					    let j = rows.length;
+					    while(j < maxRows) {
+						rows.push(<tr></tr>);
+						j++
+					    }
+					    return rows;
+					})()
+					}
+					</tbody>
+					</table>)
+			    })())
+			    
+			    i = i + maxRows;
+			}
+			
+			return (<div id="cardset-selector">
+				{tables}
+				{( _ => {
+				    if(this.state.is_building)
+					return <div className="mdl-spinner mdl-js-spinner is-active"></div>
+				})()
+				}
+				<button className="mdl-button mdl-js-button mdl-button--raised" style={{display:"inline-block",marginLeft:"1rem",marginRight:"1rem"}} onClick={this.updateCardView.bind(this)}>Update Set View</button>
+				</div>)
+		    }
+		})()
+		}
 		</div>
 		<div className="mdl-cell mdl-cell--6-col">
 		<SearchField value={this.state.cardset_filter} changehandler={this.filterCardSet.bind(this)}/>
@@ -84,9 +133,14 @@ class Main extends React.Component {
 
 			    let count = card.ownership ? ( card.ownership.count == 0 ? card.ownership.price : card.ownership.count ) : "No Info";
 			    
-			    
+			    let props = {};
+			    if(this.state.deck) {
+				if(this.state.deck.filter( ({id}) => card.id === id).length === 0) {
+				    props.addhandler = this.addCardToDeck.bind(this);
+				}
+			    }
 			    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth: "250px" }} key={card.number}>
-				    <Card {...card} addhandler={this.addCardToDeck.bind(this)} count={count} menuOpts={[{id:'tcgrepublic',label:'Search TCG Republic'}]} menuHandler={
+				    <Card {...card} {...props} count={count} menuOpts={[{id:'tcgrepublic',label:'Search TCG Republic'},{id:'tcgplayer',label:'Search TCG Player'}]} menuHandler={
 					evt => {
 					    let target = evt.currentTarget.dataset.id;
 					    if(target === 'tcgrepublic')
@@ -107,8 +161,21 @@ class Main extends React.Component {
     }
 
     updateCardView(evt) {
-	let target = evt.target.dataset.id;
-	let observable = Cards.getcardsfromset(target);
+	//	let target = evt.target.dataset.id;
+	//	let
+
+	let selected = document.querySelectorAll("#cardset-selector tr.is-selected td:nth-child(2)");
+	let targets = [];
+	if(selected) {
+	    for(let i = 0; i < selected.length; ++i) {
+		let item = selected.item(i);
+		if(item.dataset.id)
+		    targets.push(item.dataset.id);
+	    }
+	}
+	//	let target = targets[0];
+	let observable = Rx.Observable.merge(targets.map(Cards.getcardsfromset));
+//	let observable = Cards.getcardsfromset(target);
 	let buffer = [];
 	if(this.cardViewRetrieveHandle) {
 	    this.cardViewRetrieveHandle.dispose();
@@ -116,6 +183,7 @@ class Main extends React.Component {
 	if(this.ownershipRetrieveHandle) {
 	    this.ownershipRetrieveHandle.dispose();
 	}
+	
 	this.cardViewRetrieveHandle = observable.subscribe(
 	    data => buffer.push(data),
 	    err => {
@@ -123,7 +191,7 @@ class Main extends React.Component {
 	    },
 	    _ => {
 		console.log('update card view');
-		this.setState({cardset:target,cardset_coll:buffer});
+		this.setState({cardset:targets,cardset_coll:buffer,is_building:true});
 		let buffer2 = [];
 		this.ownershipRetrieveHandle = Rx.Observable.fromArray(buffer)
 		    .selectMany(data => {
@@ -141,28 +209,11 @@ class Main extends React.Component {
 			},
 			err => {
 			    console.log(`error ${err}`);
+			},
+			_ => {
+			    this.setState({is_building:undefined});
 			})
-	    })
-	// observable
-	//     .selectMany(data => {
-	// 	return Cards.getownership(data.number)
-	// 	    .map( ownership => {
-	// 	    return Object.assign({}, data, {ownership})
-	// 	})
-	//     })
-	//     .subscribe(
-	// 	data => {
-	// 	    buffer.push(data);
-		    
-	// 	},
-	// 	err => {
-	// 	    //alert("Price check error: ")
-	// 	    console.log(`error ${err}`);
-	// 	},
-	// 	_ => {
-	// 	    console.log('update card view');
-	// 	    this.setState({cardset:target,cardset_coll:buffer});
-	// 	})
+ 	    })
 	
     }
 
