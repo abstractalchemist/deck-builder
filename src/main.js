@@ -6,6 +6,7 @@ import {Nav,Drawer,Body,Menu,Card,SearchField} from 'ui-utils';
 
 
 import { CardSetView, CardSetNameView, Checkbox, NameDialog, DeckSettingsDialog, DeckLevelView } from './card_utils';
+import { generateCard, generateDeckView } from './utils'
 
 /*
  * state attributes
@@ -235,11 +236,6 @@ class Main extends React.Component {
 	    alert("target undefined");
     }
 
-
-    buildDialog() {
-	return <DeckSettingsDialog {...this.state} deletehandler={this.deleteDeck.bind(this)}/>
-    }
-
     deleteDeck(evt) {
 	let target = evt.currentTarget.dataset.id;
 	if(target) {
@@ -250,20 +246,6 @@ class Main extends React.Component {
 		.subscribe(decks => {
 		    this.setState({ decks })
 		});
-	}
-    }
-
-    generateCard(addHandler, removeHandler) {
-	return function(card) {
-	    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth:"300px" }}>
-		    <Card {...card} addhandler={addHandler} removehandler={removeHandler}>
-		    {(_ => {
-			if(card.abilities)
- 			    return card.abilities.map( text => <p style={{fontSize:"10px",lineHeight:"12px"}}>{text}</p>)
-		    })()}
-		    
-		    </Card>
-		    </div>)
 	}
     }
     
@@ -309,7 +291,7 @@ class Main extends React.Component {
 		}
 		label="Split On Level"/>
 		</div>
-		{this.buildDialog()}
+		<DeckSettingsDialog {...this.state} deletehandler={this.deleteDeck.bind(this)} clickhandler={this.updateDeckView.bind(this)}/>
 		<NameDialog {...this.state} changehandler={
 		    evt => {
 			
@@ -335,32 +317,8 @@ class Main extends React.Component {
 		} />
 		
 		{( _ => {
-
-		    
-		    if(this.state.deck) {
-			console.log("building deck view");
-			let filterFunc = (lvl) => {
-			    let cards =this.state.deck
-				.filter(({level,rarity}) => !/C[A-Z]/.test(rarity) && parseInt(level) === lvl)
-				.map(this.generateCard(this.updateCardCount.bind(this), this.removeCardFromDeck.bind(this)));
-			    if(!this.state.flush_display)
-				cards.push(<div className="mdl-cell" style={{width:"100%"}}/>);
-			    return cards;
-			}
-			let climaxCards = _ => {
-			    return this.state.deck.filter( ({ rarity }) => /C[A-Z]/.test(rarity))
-				.map(this.generateCard(this.updateCardCount.bind(this), this.removeCardFromDeck.bind(this)))
-			}
-					    
-			return [].concat(
-			    filterFunc(3),
-			    filterFunc(2),
-			    filterFunc(1),
-			    filterFunc(0),
-			    climaxCards());
-			
-			
-		    }
+		    if(this.state.deck) 
+			return generateDeckView(this.state.deck, this.state.flush_display, this.updateCardCount.bind(this), this.removeCardFromDeck.bind(this));
 		})()
 		}
 		
@@ -402,7 +360,7 @@ class Main extends React.Component {
     generateTabs() {
 	if(this.tabs) {
 	    return this.tabs.map( ({id,content}) => {
-		return (<section className="mdl-layout__tab-panel" id={id}>
+		return (<section className="mdl-layout__tab-panel" id={id} key={id}>
 			<div className="page-content">
 			{content()}
 			</div>

@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { partitioncardsets } from './utils';
+import { Card } from 'ui-utils'
 
 function CardSetNameView({cardsets,is_building,clickhandler}) {
     const maxRows = 5;
@@ -22,6 +23,7 @@ function CardSetNameView({cardsets,is_building,clickhandler}) {
 		}
 		</div>)
     }
+    return null;
 
 }
 
@@ -53,7 +55,7 @@ function CardSetView({cardset,cardset_filter,filter_to_deck,deck,addhandler,addh
 	let count = card.ownership ? ( card.ownership.count == 0 ? card.ownership.price : card.ownership.count ) : "No Info";
 	
 	let props = {};
-	if(state.deck) {
+	if(deck) {
 	    if(deck.filter( ({id}) => card.id === id).length === 0) {
 		props.addhandler = addhandler;
 	    }
@@ -70,8 +72,10 @@ function CardSetView({cardset,cardset_filter,filter_to_deck,deck,addhandler,addh
 		    }
 		}>
 		{(_ => {
- 		    if(card.abilities)
- 			return card.abilities.map( text => <p style={{fontSize:"10px",lineHeight:"12px"}}>{text}</p>)
+ 		    if(card.abilities) {
+			let i = 0;
+ 			return card.abilities.map( text => <p key={"ability_text_" + i++} style={{fontSize:"10px",lineHeight:"12px"}}>{text}</p>)
+		    }
 		})()}
 		</Card>
 		</div>)
@@ -106,19 +110,25 @@ function NameDialog({deck_input_name, changehandler, addhandler}) {
 
 }
 
-function DeckSettingsDialog({decks,deletehandler}) {
+function DeckSettingsDialog({decks,deletehandler,clickhandler}) {
     return (<dialog id='deck_settings' className="mdl-dialog">
 	    <div className="mdl-dialog__content">
 	    <ul className="mdl-list">
 	    {( _ => {
 		if(decks) {
 		    return decks.map( ({id,label}) => {
-			return (<li  className="mdl-list__item" >
+			return (<li  className="mdl-list__item" key={id}>
 				<span data-id={id}  className="mdl-list__item-primary-content" onClick={
 				    evt => {
-					this.updateDeckView(evt);
+					if(clickhandler)
+					    clickhandler(evt);
+					//					this.updateDeckView(evt);
+					
 					let dialog = document.querySelector('#deck_settings');
-					dialog.close();
+					if(dialog)
+					    dialog.close();
+					else
+					    console.log("dialog not found;  either in test mode or query is wrong")
 				    }
  				}>
 				<i className="material-icons mdl-list__item-icon">view_stream</i>
