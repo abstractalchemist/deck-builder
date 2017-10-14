@@ -122,11 +122,13 @@ class Main extends React.Component {
 			return (<div id="cardset-selector">
 				{tables}
 				{( _ => {
-				    if(this.state.is_building)
+				    if(this.state.is_building) {
 					return <div className="mdl-spinner mdl-js-spinner is-active"></div>
+				    }
+				    return (<button className="mdl-button mdl-js-button mdl-button--raised" style={{display:"inline-block",marginLeft:"1rem",marginRight:"1rem"}} onClick={this.updateCardView.bind(this)}>Update Set View</button>)
+					
 				})()
 				}
-				<button className="mdl-button mdl-js-button mdl-button--raised" style={{display:"inline-block",marginLeft:"1rem",marginRight:"1rem"}} onClick={this.updateCardView.bind(this)}>Update Set View</button>
 				</div>)
 		    }
 		})()
