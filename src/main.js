@@ -4,6 +4,9 @@ import Cards from './card_store';
 import Rx from 'rx';
 import {Nav,Drawer,Body,Menu,Card,SearchField} from 'ui-utils';
 
+
+import { CardSetView, CardSetNameView, Checkbox, NameDialog, DeckSettingsDialog, DeckLevelView } from './card_utils';
+
 /*
  * state attributes
  * - deck - list of cards to display in deck view
@@ -16,6 +19,7 @@ import {Nav,Drawer,Body,Menu,Card,SearchField} from 'ui-utils';
  * - deck_input_name - name of the deck currently being viewed
  * - deck_id - id of the deck currently being viewed ( in the database )
  */
+
 
 class Main extends React.Component {
 
@@ -82,118 +86,22 @@ class Main extends React.Component {
     buildCardSet() {
 	return (<div className="mdl-grid">
 		<div className="mdl-cell mdl-cell--6-col">
-		{( _ => {
-		    const maxRows = 5;
-		    if(this.state.cardsets) {
-			let i = 0;
-			let tables = [];
-			while(i < this.state.cardsets.length) {
-			    let slice = this.state.cardsets.slice(i, i+ maxRows);
-			    tables.push((_ => {
-				return (<table className="mdl-data-table mdl-js-data-table mdl-data-table--selectable" style={{display:"inline-block",marginLeft:"1rem",marginRight:"1rem"}}>
-					<thead>
-					<tr>
-					<th className="mdl-data-table__cell--non-numeric">Set Name</th>
-					</tr>
-					</thead>
-					<tbody>
-					{( _ => {
-					    let rows = slice.map(o => {
-						
-						return (<tr>
-							<td className="mdl-data-table__cell--non-numeric" data-id={o.id}>{o.label}</td>
-							</tr>)
-					    })
-					    let j = rows.length;
-					    while(j < maxRows) {
-						rows.push(<tr></tr>);
-						j++
-					    }
-					    return rows;
-					})()
-					}
-					</tbody>
-					</table>)
-			    })())
-			    
-			    i = i + maxRows;
-			}
-			
-			return (<div id="cardset-selector">
-				{tables}
-				{( _ => {
-				    if(this.state.is_building) {
-					return <div className="mdl-spinner mdl-js-spinner is-active"></div>
-				    }
-				    return (<button className="mdl-button mdl-js-button mdl-button--raised" style={{display:"inline-block",marginLeft:"1rem",marginRight:"1rem"}} onClick={this.updateCardView.bind(this)}>Update Set View</button>)
-					
-				})()
-				}
-				</div>)
-		    }
-		})()
-		}
+		<CardSetNameView {...this.state} clickhandler={this.updateCardView.bind(this)} />
+		 
 		</div>
 		<div className="mdl-cell mdl-cell--6-col">
-		<SearchField value={this.state.cardset_filter} changehandler={this.filterCardSet.bind(this)}/>
-		<label className="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" htmlFor="filter-in-deck">
-		<input type="checkbox" id="filter-in-deck" className="mdl-checkbox__input" onClick={
+ 		<SearchField value={this.state.cardset_filter} changehandler={this.filterCardSet.bind(this)}/>
+		<Checkbox clickhandler={
 		    evt => {
 			this.setState({filter_to_deck:evt.currentTarget.checked})
 			
 		    }
-		}></input>
-		<span className="mdl-checkbox__label">Filter On Deck</span>
-		</label>
+		} label="Filter On Deck"/>
 		</div>
 		
 		{( _ => {
-		    if(this.state.cardset && this.state.cardset_coll) {
-			
-			let cardset = this.state.cardset_coll;
-			if(this.state.cardset_filter) {
-			    let re = new RegExp(this.state.cardset_filter);
-			    cardset = cardset.filter( card => {
-
-				return re.test(card.abilities) || re.test(card.number) || re.test(card.name);
-			    });
-			    
-			}
-			if(this.state.filter_to_deck && this.state.deck) {
-			    cardset = cardset.filter( ({id}) => {
-				return this.state.deck.filter( ({id:deck_id}) => deck_id === id).length > 0;
-			    })
-			}
-			return cardset.map(card => {
-			    
-
-			    let count = card.ownership ? ( card.ownership.count == 0 ? card.ownership.price : card.ownership.count ) : "No Info";
-			    
-			    let props = {};
-			    if(this.state.deck) {
-				if(this.state.deck.filter( ({id}) => card.id === id).length === 0) {
-				    props.addhandler = this.addCardToDeck.bind(this);
-				}
-			    }
-			    return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth: "250px" }} key={card.number}>
-				    <Card {...card} {...props} count={count} addhandler2={this.updateOwnership.bind(this)} menuOpts={[{id:'tcgrepublic',label:'Search TCG Republic'},{id:'tcgplayer',label:'Search TCG Player'}]} menuHandler={
-					evt => {
-					    let target = evt.currentTarget.dataset.id;
-					    if(target === 'tcgrepublic')
-						
-						window.open("https://tcgrepublic.com/product/text_search.html?q=" + encodeURIComponent(card.number));
-					    else if(target === 'tcgplayer')
-						window.open("https://www.google.com/search?q=" + encodeURIComponent("site:shop.tcgplayer.com \"" + card.number + "\" -\"Price Guide\""))
-					}
-				    }>
-				    {(_ => {
- 					if(card.abilities)
- 					    return card.abilities.map( text => <p style={{fontSize:"10px",lineHeight:"12px"}}>{text}</p>)
-				    })()}
-				    </Card>
-				    </div>)
-			})
-		    }
+		    if(this.state.cardset && this.state.cardset_coll) 
+			return <CardSetView {...this.state} addhandler={this.addCardToDeck.bind(this)} addhandler2={this.updateOwnership.bind(this)} />;
 		})()}
 		</div>)
     }
@@ -327,102 +235,9 @@ class Main extends React.Component {
 	    alert("target undefined");
     }
 
-    buildNameDialog() {
-	return (<dialog id='deck_name' className='mdl-dialog'>
-		<div className="mdl-dialog__content">
-		<div className="mdl-textfield mdl-js-textfield">
-		<input className="mdl-textfield__input" type="text" id="name" value={this.state.deck_input_name} onChange={
-		    evt => {
-			
-			this.setState({deck_input_name: evt.target.value});
-			
-		    }}>
-		</input>
-		<label className="mdl-textfield__label" htmlFor="name">Name</label>
-		</div>
-		</div>
-		<div className="mdl-dialog__actions mdl-dialog__action--full-width">
-		<button className="mdl-button mdl-js-button" onClick={
-		    _ => {
-			Deck.adddeck(this.state.deck_input_name)
-			    .selectMany( _ => {
-				return Deck.getdecks();
-			    })
-			    .subscribe(
-				decks => {
-				    let dialog = document.querySelector('#deck_name');
-				    
-				    dialog.close();
-				    
-				    this.setState({deck_input_name:"",decks});
-				});
-		    }
-		}>
-		Add
-		</button>
-		<button className="mdl-button mdl-js-button" onClick={
-		    _ => {
-			let dialog = document.querySelector('#deck_name');
-			dialog.close();
-		    }
-		}>
-		Cancel
-		</button>
-		
-		</div>
-		</dialog>)
-    }
 
     buildDialog() {
-	return (<dialog id='deck_settings' className="mdl-dialog">
-		<div className="mdl-dialog__content">
-		<ul className="mdl-list">
-		{( _ => {
-		    let decks = this.state.decks;
-		    if(decks) {
-			return decks.map( ({id,label}) => {
-			    return (<li  className="mdl-list__item" >
-				    <span data-id={id}  className="mdl-list__item-primary-content" onClick={
-					evt => {
-					    this.updateDeckView(evt);
-					    let dialog = document.querySelector('#deck_settings');
-					    dialog.close();
-					}
- 				    }>
-				    <i className="material-icons mdl-list__item-icon">view_stream</i>
-				    {label}
-				    </span>
-				    <span className="mdl-list__item-secondary-action">
-				    <button data-id={id} className="mdl-button mdl-js-button" onClick={this.deleteDeck.bind(this)}>
-				    Delete
-				    </button>
-				    </span>
-				    </li>)
-			})
-		    }
-		})()}
-		</ul>
-		</div>
-		<div className="mdl-dialog__actions mdl-dialog__actions--full-width">
-		<button className="mdl-button mdl-js-button" onClick={
-		    _ => {
-			let dialog = document.querySelector('#deck_name');
-			if(!dialog.showModal)
-			    dialogPolyfill.registerDialog(dialog)
-			dialog.showModal();
-		    }}>
-		Add Deck
-		</button>
-		<button className="mdl-button mdl-js-button" onClick={
-		    (evt => {
-			let dialog = document.querySelector('#deck_settings');
-			dialog.close();
-		    })
-		}>
-		Close
-		</button>
-		</div>
-		</dialog>)
+	return <DeckSettingsDialog {...this.state} deletehandler={this.deleteDeck.bind(this)}/>
     }
 
     deleteDeck(evt) {
@@ -454,15 +269,6 @@ class Main extends React.Component {
     
     buildDeck() {
 
-	let levelcalculator = lvl => {
-	    if(this.state.deck)
-		return this.state.deck.filter( ({ level,rarity }) => !/C[A-Z]/.test(rarity) && (parseInt(level) === lvl)).map(({count}) => count).reduce((sum,value) => sum + value, 0);
-	}
-	let climaxcalculator = _ => {
-	    if(this.state.deck) {
-		return this.state.deck.filter(({ rarity }) => /C[A-Z]/.test(rarity)).map(({count}) => count).reduce( (sum,value) => sum + value, 0);
-	    }
-	}
 	return (<div className="mdl-grid">
 		<div className="mdl-cell mdl-cell--12-col">
 		{ /* add deck ids here */}
@@ -490,64 +296,44 @@ class Main extends React.Component {
 		Save Settings
 		</button>
 
-		<table id="deck_stats" style={{ display:"inline-block" }} className="mdl-data-table mdl-js-data-table">
-		<thead>
-		<tr>
-		<th>
-		Level 3
-		</th>
-		<th>
-		Level 2
-		</th>
-		<th>
-		Level 1
-		</th>
-		<th>
-		Level 0
-		</th>
-		<th>
-		Climax Cards
-		</th>
-		<th>
-		Total
-		</th>
-		</tr>
-		</thead>
-		<tbody>
-		<tr>
-		<td>{levelcalculator(3)}
-		</td>
-		<td>{levelcalculator(2)}
-		</td>
-		
-		<td>{levelcalculator(1)}
-		</td>
-		<td>{levelcalculator(0)}
-		</td>
-		<td>{climaxcalculator()}
-		</td>
-		<td>
-		{this.state.deck.map(({count}) => count).reduce((sum,value) => sum + value,0)}
-		</td>
-		</tr>
-		</tbody>
-		</table>
+
+		<DeckLevelView {...this.state} />
 		<div className="mdl-textfield mdl-js-textfield">
 		<label htmlFor="deck_label" className="mdl-textfield__label">{this.state.deck_name}</label>
 		<input id="deck_label" className="mdl-textfield__input"></input>
 		</div>
-		<label className="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" htmlFor="checkbox-1">
-		<input type="checkbox" id="checkbox-1" className="mdl-checkbox__input" checked={!this.state.flush_display} onClick={
+		<Checkbox clickhandler={
 		    evt => {
 			this.setState({flush_display:!evt.currentTarget.checked});
 		    }
-		}></input>
-		<span className="mdl-checkbox__label">Split On Level</span>
-		</label>
+		}
+		label="Split On Level"/>
 		</div>
 		{this.buildDialog()}
-		{this.buildNameDialog()}
-
+		<NameDialog {...this.state} changehandler={
+		    evt => {
+			
+			this.setState({deck_input_name: evt.target.value});
+		
+		    }
+		}
+		addhandler={
+		    _ => {
+			Deck.adddeck(this.state.deck_input_name)
+			    .selectMany( _ => {
+			return Deck.getdecks();
+			    })
+			    .subscribe(
+				decks => {
+			    let dialog = document.querySelector('#deck_name');
+				    
+				    dialog.close();
+				    
+			    this.setState({deck_input_name:"",decks});
+				});
+		    }
+		} />
+		
 		{( _ => {
 
 		    
