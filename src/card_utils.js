@@ -27,28 +27,44 @@ function CardSetNameView({cardsets,is_building,clickhandler}) {
 
 }
 
-function Checkbox({clickhandler,label}) {
-    return(<label className="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" htmlFor="filter-in-deck">
-	   <input type="checkbox" id="filter-in-deck" className="mdl-checkbox__input" onClick={clickhandler}></input>
+function Checkbox({clickhandler,label,value,id}) {
+    return(<label className="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" htmlFor={id}>
+	   <input type="checkbox" value={value} id={id} className="mdl-checkbox__input" onClick={clickhandler}></input>
 	   <span className="mdl-checkbox__label">{label}</span>
 	   </label>)
 
 }
 
-function CardSetView({cardset_coll,cardset_filter,filter_to_deck,deck,addhandler,addhandler2}) {
+function CardSetView({cardset_coll,cardset_filter,filter_to_deck,filter_owned,filter_unowned,deck,addhandler,addhandler2,removehandler2}) {
     let cardset = cardset_coll;
     if(cardset_filter) {
-	let re = new RegExp(cardset_filter);
-	cardset = cardset.filter( card => {
-	    
-	    return re.test(card.abilities) || re.test(card.number) || re.test(card.name);
-	});
+	try {
+	    let re = new RegExp(cardset_filter);
+	    cardset = cardset.filter( card => {
+		
+		return re.test(card.abilities) || re.test(card.number) || re.test(card.name);
+	    });
+	}
+	catch(e) {
+	    console.log(e)
+	}
 	
     }
     if(filter_to_deck && deck) {
 	cardset = cardset.filter( ({id}) => {
 	    return deck.filter( ({id:deck_id}) => deck_id === id).length > 0;
 	})
+    }
+    if(filter_owned) {
+	cardset = cardset.filter( ( { ownership : { count } } ) => {
+	    return count > 0;
+	})
+    }
+    if(filter_unowned) {
+	cardset = cardset.filter( ( { ownership : { count } } ) => {
+	    return count === 0;
+	})
+	
     }
     return cardset.map(card => {
 	
@@ -62,7 +78,7 @@ function CardSetView({cardset_coll,cardset_filter,filter_to_deck,deck,addhandler
 	    }
 	}
 	return (<div className="mdl-cell mdl-cell--3-col" style={{ maxWidth: "250px" }} key={card.number}>
-		<Card {...card} {...props} count={count} addhandler2={addhandler2} menuOpts={[{id:'tcgrepublic',label:'Search TCG Republic'},{id:'tcgplayer',label:'Search TCG Player'}]} menuHandler={
+		<Card {...card} {...props} count={count} addhandler2={addhandler2} removehandler2={removehandler2} menuOpts={[{id:'tcgrepublic',label:'Search TCG Republic'},{id:'tcgplayer',label:'Search TCG Player'},{id:'amazon',label:"Search Amazon"}]} menuHandler={
 		    evt => {
 			let target = evt.currentTarget.dataset.id;
 			if(target === 'tcgrepublic')
@@ -70,6 +86,8 @@ function CardSetView({cardset_coll,cardset_filter,filter_to_deck,deck,addhandler
 			    window.open("https://tcgrepublic.com/product/text_search.html?q=" + encodeURIComponent(card.number));
 			else if(target === 'tcgplayer')
 			    window.open("https://www.google.com/search?q=" + encodeURIComponent("site:shop.tcgplayer.com \"" + card.number + "\" -\"Price Guide\""))
+			else if(target === 'amazon')
+			    window.open("https://www.google.com/search?q=" + encodeURIComponent("site:www.amazon.com \"" + card.number + "\""))
 		    }
 		}>
 		{(_ => {
@@ -118,7 +136,8 @@ function DeckSettingsDialog({decks,deletehandler,clickhandler}) {
 	    {( _ => {
 		if(decks) {
 		    return decks.map( ({id,label}) => {
-			return (<li  className="mdl-list__item" key={id}>
+			
+			return (<li className="mdl-list__item" key={id}>
 				<span data-id={id}  className="mdl-list__item-primary-content" onClick={
 				    evt => {
 					if(clickhandler)

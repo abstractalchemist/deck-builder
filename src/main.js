@@ -88,6 +88,7 @@ class Main extends React.Component {
 	
     }
 
+    // builds the top portion of the card set view
     buildCardSet() {
 	return (<div className="mdl-grid">
 		<div className="mdl-cell mdl-cell--6-col">
@@ -102,13 +103,57 @@ class Main extends React.Component {
 			
 		    }
 		} label="Filter On Deck"/>
+		<Checkbox label="Filter Owned" value={this.state.filter_owned} clickhandler={
+		    evt => {
+			this.setState({filter_owned:evt.currentTarget.checked});
+		    }
+		}/>
+		<Checkbox label="Filter Unowned" value={this.state.filter_unowned} clickhandler={
+		    evt => {
+			this.setState({filter_unowned:evt.currentTarget.checked})
+		    }
+		}/>
+		<button className="mdl-button mdl-js-button mdl-button--raised" onClick={
+		    evt => {
+			Cards.export_card_list(this.state.cardset_coll.map( ({id}) => id))
+			    .subscribe( ({url,data}) => {
+				window.open(url + "?keys=" + data);
+			    })
+				
+		    }
+		}>Export View</button>
+
 		</div>
 		
 		{( _ => {
 		    if(this.state.cardset && this.state.cardset_coll) 
-			return <CardSetView {...this.state} addhandler={this.addCardToDeck.bind(this)} addhandler2={this.updateOwnership.bind(this)} />;
+			return <CardSetView {...this.state} addhandler={this.addCardToDeck.bind(this)} addhandler2={this.updateOwnership.bind(this)} removehandler2={this.removeOwnership.bind(this)}/>;
 		})()}
 		</div>)
+    }
+
+    removeOwnership(evt) {
+	console.log(`removing ownership of ${evt.currentTarget.dataset.id}`);
+	let target = evt.currentTarget.dataset.id;
+	let number = evt.currentTarget.dataset.number;
+	Cards.removefromcollection(target)
+	    .selectMany(_ => Cards.getcard(target))
+	    .selectMany(data =>  Cards.getownership(number).map(o => Object.assign({}, {ownership:o}, data)))
+	    .subscribe(
+		o => {
+		    let ptr = this.state.cardset_coll.map(j => {
+			if(j.id === o.id)
+			    return o
+			return j;
+		    });
+		    this.setState({cardset_coll:ptr});
+		    
+		},
+		err => {
+		    alert(`ownership update error ${err}`);
+		})
+
+	
     }
 
     updateCardView(evt) {

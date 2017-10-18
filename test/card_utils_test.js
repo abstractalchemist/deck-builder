@@ -71,9 +71,19 @@ describe('<CardSetNameView>', function() {
 
 describe('<Checkbox>', function() {
     it('init', function() {
-	const obj = mount(<Checkbox label={"A Label"}/>);
+	let clicked = false;
+	const obj = mount(<Checkbox label={"A Label"} id="test" value={false} clickhandler={
+	    evt => {
+		console.log("clicked in " + evt.currentTarget.checked);
+		clicked = true;
+	    }
+	}/>);
 	expect(obj).to.not.be.null;
 	expect(obj.text()).to.equal("A Label");
+	let input = obj.find('input');
+	
+	input.simulate('click',{currentTarget:{checked:true,checked2:true}})
+	expect(clicked).to.be.true;
     })
 })
 
@@ -101,7 +111,7 @@ describe('<NameDialog>', function() {
 
 describe('<DeckSettingsDialog>', function() {
     it('init', function() {
-	const obj = mount(<DeckSettingsDialog decks={[{},{},{},{},{}]}
+	const obj = mount(<DeckSettingsDialog decks={[{id:1},{id:2},{id:3},{id:4},{id:5}]}
 			  deletehandler={
 			      _ => {
 			      }

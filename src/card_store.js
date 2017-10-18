@@ -8,8 +8,63 @@ export default (function() {
 		   {id:"069",level:3,image:"https://images.littleakiba.com/tcg/card37073-medium.jpg"},
 		   {id:"010",level:3,image:"https://images.littleakiba.com/tcg/card37016-medium.jpg"}]
     let selecteddb;
+
+    let mapper = card_id => {
+	return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/cardmapping/mapping"}))
+	    .map(JSON.parse)
+	    .map(({mapping}) => {
+		//		    let db = mapping.find(({prefix}) => card_id.startsWith(prefix));
+		let matching_dbs = mapping.filter( ({ prefix }) => card_id.startsWith(prefix));
+		    let max = -1
+		let max_index = -1;
+		
+		matching_dbs.forEach(({prefix},j) => {
+		    if(prefix.length > max) {
+			max = prefix.length;
+			    max_index = j;
+		    }
+		})
+		return matching_dbs[max_index];
+	    })
+
+    }
+    
+    let cardmapper = card_id => {
+	return mapper(card_id)
+	    .selectMany(db =>Rx.Observable.fromPromise(Http({method:"GET",url:"/api/" + db.db + "/" + card_id})).map(JSON.parse).map(obj => Object.assign({},obj, {id:obj._id})));
+		
+    }
+    
     return {
 
+	removefromcollection(card_id) {
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/library/" + card_id}))
+		.catch(_ => {
+		    return Rx.Observable.just();
+		})
+		.map(JSON.parse)
+		.selectMany(({count,_rev}) => {
+		    if(count === 1)
+			return Rx.Observable.fromPromise(Http({method:"DELETE",url:"/api/library/"+card_id+"?rev=" + _rev}))
+		    else
+			    
+			return Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/library/"+card_id}, JSON.stringify({count:count-1,_rev})))
+		})
+			
+	},
+	
+	// returns a url of export card list
+	export_card_list(card_ids) {
+	    return Rx.Observable.fromArray(card_ids)
+		.selectMany(mapper)
+		.toArray()
+		.map(dbs => {
+		    let db = dbs[0].db;
+		    return {url:"/api/" + db + "/_design/view/_list/all/byid",data:JSON.stringify(card_ids)};
+		})
+		    
+		
+	},
 	addtocollection(card_id) {
 	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/library/" + card_id}))
 		.map(JSON.parse)
@@ -36,23 +91,7 @@ export default (function() {
 
 	// get a card based on id
 	getcard(card_id) {
-	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/cardmapping/mapping"}))
-		.map(JSON.parse)
-		.selectMany(({mapping}) => {
-		    //		    let db = mapping.find(({prefix}) => card_id.startsWith(prefix));
-		    let matching_dbs = mapping.filter( ({ prefix }) => card_id.startsWith(prefix));
-		    let max = -1
-		    let max_index = -1;
-		    
-		    matching_dbs.forEach(({prefix},j) => {
-			if(prefix.length > max) {
-			    max = prefix.length;
-			    max_index = j;
-			}
-		    })
-		    let db = matching_dbs[max_index];
-		    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/" + db.db + "/" + card_id})).map(JSON.parse).map(obj => Object.assign({},obj, {id:obj._id}));
-		})
+	    return cardmapper(card_id);
 	},
 
 	// get all cards from a card set id
