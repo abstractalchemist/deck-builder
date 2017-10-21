@@ -1,7 +1,7 @@
 import React from 'react';
 import Deck from './deck_store';
 import Cards from './card_store';
-import Rx from 'rx';
+import Rx from 'rxjs/Rx';
 import {Nav,Drawer,Body,Menu,Card,SearchField} from 'ui-utils';
 
 
@@ -45,8 +45,8 @@ class Main extends React.Component {
 	let target = evt.currentTarget.dataset.id;
 	let number = evt.currentTarget.dataset.number;
 	Cards.addtocollection(target)
-	    .selectMany(_ => Cards.getcard(target))
-	    .selectMany(data =>  Cards.getownership(number).map(o => Object.assign({}, {ownership:o}, data)))
+	    .mergeMap(_ => Cards.getcard(target))
+	    .mergeMap(data =>  Cards.getownership(number).map(o => Object.assign({}, {ownership:o}, data)))
 	    .subscribe(
 		o => {
 		    let ptr = this.state.cardset_coll.map(j => {
@@ -137,8 +137,8 @@ class Main extends React.Component {
 	let target = evt.currentTarget.dataset.id;
 	let number = evt.currentTarget.dataset.number;
 	Cards.removefromcollection(target)
-	    .selectMany(_ => Cards.getcard(target))
-	    .selectMany(data =>  Cards.getownership(number).map(o => Object.assign({}, {ownership:o}, data)))
+	    .mergeMap(_ => Cards.getcard(target))
+	    .mergeMap(data =>  Cards.getownership(number).map(o => Object.assign({}, {ownership:o}, data)))
 	    .subscribe(
 		o => {
 		    let ptr = this.state.cardset_coll.map(j => {
@@ -189,8 +189,8 @@ class Main extends React.Component {
 		console.log('update card view');
 		this.setState({cardset:targets,cardset_coll:buffer,is_building:true});
 		let buffer2 = [];
-		this.ownershipRetrieveHandle = Rx.Observable.fromArray(buffer)
-		    .selectMany(data => {
+		this.ownershipRetrieveHandle = Rx.Observable.from(buffer)
+		    .mergeMap(data => {
 			return Cards.getownership(data.number)
 			    .map(ownership => Object.assign({}, data, {ownership}))
 		    })
@@ -222,7 +222,7 @@ class Main extends React.Component {
 	    let deck = this.state.deck;
 	    if(deck) {
 		let observable = Cards.getcard(target)
-		    .selectMany(card => {
+		    .mergeMap(card => {
 			if(card.relatedTo) {
 			    return Cards.getcard(card.relatedTo).map(relation => {
 				return { card,relation}
@@ -290,7 +290,7 @@ class Main extends React.Component {
     deleteDeck(evt) {
 	let target = evt.currentTarget.dataset.id;
 	if(target) {
-	    Deck.deleteDeck(target).selectMany(
+	    Deck.deleteDeck(target).mergeMap(
 		_ => {
 		    return Deck.getdecks();
 		})
@@ -353,7 +353,7 @@ class Main extends React.Component {
 		addhandler={
 		    _ => {
 			Deck.adddeck(this.state.deck_input_name)
-			    .selectMany( _ => {
+			    .mergeMap( _ => {
 			return Deck.getdecks();
 			    })
 			    .subscribe(
@@ -387,8 +387,8 @@ class Main extends React.Component {
 		deck => {
 		    if(deck && deck.deck) {
 			console.log("setting target to " + target);
-			Rx.Observable.fromArray(deck.deck)
-			    .selectMany( ({id,count}) => {
+			Rx.Observable.from(deck.deck)
+			    .mergeMap( ({id,count}) => {
 				return Cards.getcard(id).map(data => Object.assign({}, data, {count}))
 			    })
 			    .toArray()

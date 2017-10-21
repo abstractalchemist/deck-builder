@@ -1,5 +1,5 @@
 import Http from 'utils';
-import Rx from 'rx';
+import Rx from 'rxjs/Rx';
 
 export default (function() {
     let testing = [{id:"033",level:3,image:"https://images.littleakiba.com/tcg/card37121-large.jpg",abilities:["【A】 When this card is placed on Stage from Hand, you may place the top card of your Clock into Waiting Room.", "【A】 This ability can only be activated up to 1 time each turn. When you used 【S】, during this turn, this card gets +X Power. X is equals to the number of your other 《格闘》 Characters x500.", "【A】【CXCOMBO】 When this card attacks, if 「アクセルスマッシュ・インフィニティ」 is in the Climax slot, until the end of your opponent's next turn, this card gets +1500 Power, gains the following ability.『【A】 When the Character facing this card attacks, you may deal 1 Damage to your opponent.』(Damage can be cancelled)"]},
@@ -31,7 +31,7 @@ export default (function() {
     
     let cardmapper = card_id => {
 	return mapper(card_id)
-	    .selectMany(db =>Rx.Observable.fromPromise(Http({method:"GET",url:"/api/" + db.db + "/" + card_id})).map(JSON.parse).map(obj => Object.assign({},obj, {id:obj._id})));
+	    .mergeMap(db =>Rx.Observable.fromPromise(Http({method:"GET",url:"/api/" + db.db + "/" + card_id})).map(JSON.parse).map(obj => Object.assign({},obj, {id:obj._id})));
 		
     }
     
@@ -43,7 +43,7 @@ export default (function() {
 		    return Rx.Observable.just();
 		})
 		.map(JSON.parse)
-		.selectMany(({count,_rev}) => {
+		.mergeMap(({count,_rev}) => {
 		    if(count === 1)
 			return Rx.Observable.fromPromise(Http({method:"DELETE",url:"/api/library/"+card_id+"?rev=" + _rev}))
 		    else
@@ -55,8 +55,8 @@ export default (function() {
 	
 	// returns a url of export card list
 	export_card_list(card_ids) {
-	    return Rx.Observable.fromArray(card_ids)
-		.selectMany(mapper)
+	    return Rx.Observable.from(card_ids)
+		.mergeMap(mapper)
 		.toArray()
 		.map(dbs => {
 		    let db = dbs[0].db;
@@ -68,7 +68,7 @@ export default (function() {
 	addtocollection(card_id) {
 	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/library/" + card_id}))
 		.map(JSON.parse)
-		.selectMany(({count,_rev}) => {
+		.mergeMap(({count,_rev}) => {
 		    return Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/library/" + card_id}, JSON.stringify({count:count+1,_rev})))
 		})
 		.catch(_ => Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/library/" + card_id}, JSON.stringify({count:1}))));
@@ -97,15 +97,15 @@ export default (function() {
 	// get all cards from a card set id
 	getcardsfromset(id) {
 //	    if(id === 'VS') {
-//		return Rx.Observable.fromArray(testing);
+//		return Rx.Observable.from(testing);
 	    //	    }
 	    selecteddb = id;
-	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/" + id + "/_design/view/_list/all/all"})).map(JSON.parse).selectMany(Rx.Observable.fromArray).map(obj => Object.assign({},obj,{id:obj._id}));
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/" + id + "/_design/view/_list/all/all"})).map(JSON.parse).mergeMap(Rx.Observable.from).map(obj => Object.assign({},obj,{id:obj._id}));
 	},
 
 	// get all known card sets
 	getcardsets() {
-	    //	    return Rx.Observable.fromArray([{id:"VS",label:"Vivid Strke"}]).toArray();
+	    //	    return Rx.Observable.from([{id:"VS",label:"Vivid Strke"}]).toArray();
 	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/cardsets/sets"})).map(JSON.parse).pluck('sets');
 	}
     };

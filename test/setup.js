@@ -11,6 +11,11 @@ const dom = new JSDOM('<body><div id="content"></div></body>');
 global.document = dom.window.document;
 global.window = dom.window;
 global.XMLHttpRequest = dom.window.XMLHttpRequest;
+//const root = require('rxjs/util/root');
+window.Object = global.Object
+window.Math = global.Math
+//console.log(`************* global ${global.Object} *************`)
+//console.log(`************** window ${window.Object} *************`);
 //global.window.location.href = "http://localhost:8080"
 // this tells the DOM ( if it needs to know ) that it is in test mode
 global.__testing__ = true;

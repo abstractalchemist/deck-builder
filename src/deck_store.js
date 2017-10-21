@@ -1,4 +1,4 @@
-import Rx from 'rx';
+import Rx from 'rxjs/Rx';
 import Http from 'utils';
 
 export default (function() {
@@ -16,16 +16,16 @@ export default (function() {
 	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/_uuids"}))
 		.map(JSON.parse)
 		.pluck('uuids')
-		.selectMany(uuid => {
+		.mergeMap(uuid => {
 		    return Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/decks/" + uuid},JSON.stringify({label:name,deck:[]})));
 				
 		})
 	},
 	getdecks() {
-	    //	    return Rx.Observable.fromArray(decks).toArray();
+	    //	    return Rx.Observable.from(decks).toArray();
 	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/_design/view/_list/all/all"}))
 		.map(JSON.parse)
-		.selectMany(Rx.Observable.fromArray)
+		.mergeMap(Rx.Observable.from)
 		.map(obj => Object.assign({},obj,{ id: obj._id }))
 		.toArray();
 	},
@@ -50,7 +50,7 @@ export default (function() {
 	    })
 	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/" + id}))
 		.map(JSON.parse)
-		.selectMany( ({ _rev, _id, label}) => {
+		.mergeMap( ({ _rev, _id, label}) => {
 		    return Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/decks/" + id},
 							  JSON.stringify({
 							      deck: reduced,
@@ -64,7 +64,7 @@ export default (function() {
 		selecteddeck = {};
 	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/" + id}))
 		.map(JSON.parse)
-		.selectMany(({_rev,_id}) => {
+		.mergeMap(({_rev,_id}) => {
 		    return Rx.Observable.fromPromise(Http({method:"DELETE",url:"/api/decks/"+id+"?rev=" + _rev}))
 		});
 	}
