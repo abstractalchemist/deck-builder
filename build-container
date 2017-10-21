@@ -1,12 +1,12 @@
 #!/bin/bash
 
-TAG=v0.0.0.7
+TAG=$(git tag | tail -n -1)
 
-git checkout $TAG
+
 #git stash pop
 npm i
 gulp js
-docker build -t abstractalchemist/deck-builder -f Dockerfile .
-docker push abstractalchemist/deck-builder
+docker build -t abstractalchemist/deck-builder:$TAG -f Dockerfile .
+docker push abstractalchemist/deck-builder:$TAG
 sleep 10s
-docker service update --detach=false --image abstractalchemist/deck-builder deck-builder
+docker service update --detach=false --image abstractalchemist/deck-builder:$TAG deck-builder
