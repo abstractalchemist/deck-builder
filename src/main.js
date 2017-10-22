@@ -170,23 +170,25 @@ class Main extends React.Component {
 	    }
 	}
 	//	let target = targets[0];
-	let observable = Rx.Observable.merge(targets.map(Cards.getcardsfromset));
+	let observable = Rx.Observable.merge.apply(undefined, targets.map(Cards.getcardsfromset));
 //	let observable = Cards.getcardsfromset(target);
 	let buffer = [];
 	if(this.cardViewRetrieveHandle) {
-	    this.cardViewRetrieveHandle.dispose();
+	    this.cardViewRetrieveHandle.unsubscribe();
 	}
 	if(this.ownershipRetrieveHandle) {
-	    this.ownershipRetrieveHandle.dispose();
+	    this.ownershipRetrieveHandle.unsubscribe();
 	}
 	
 	this.cardViewRetrieveHandle = observable.subscribe(
-	    data => buffer.push(data),
+	    data => {
+		buffer.push(data)
+	    },
 	    err => {
 		console.log(`error ${err}`);
 	    },
 	    _ => {
-		console.log('update card view');
+//		console.log('update card view');
 		this.setState({cardset:targets,cardset_coll:buffer,is_building:true});
 		let buffer2 = [];
 		this.ownershipRetrieveHandle = Rx.Observable.from(buffer)
@@ -229,7 +231,7 @@ class Main extends React.Component {
 			    });
 			}
 			else
-			    return Rx.Observable.just({card:card});
+			    return Rx.Observable.of({card:card});
 		    });
 		let c = deck.filter( ({id}) => id === target);
 		if(c.length == 0) {

@@ -40,7 +40,7 @@ export default (function() {
 	removefromcollection(card_id) {
 	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/library/" + card_id}))
 		.catch(_ => {
-		    return Rx.Observable.just();
+		    return Rx.Observable.of();
 		})
 		.map(JSON.parse)
 		.mergeMap(({count,_rev}) => {
@@ -75,10 +75,12 @@ export default (function() {
 	},
 	
 	getownership(card_id) {
+	    if(!card_id)
+		throw "Card Id not provided"
 	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/library/" + card_id.toLowerCase().replace(/\/|-/g,"_")}))
 		.map(JSON.parse)
 		.catch(_ => Rx.Observable.fromPromise(Http({method:"GET", url:"/api-dyn/price/" + card_id}))
-		       .catch(err => Rx.Observable.just("No Price found"))
+		       .catch(err => Rx.Observable.of("No Price found"))
 	    	       .map(price => {
 	    		   return { count: 0, price }
 	    	       }));
@@ -99,8 +101,13 @@ export default (function() {
 //	    if(id === 'VS') {
 //		return Rx.Observable.from(testing);
 	    //	    }
-	    selecteddb = id;
-	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/" + id + "/_design/view/_list/all/all"})).map(JSON.parse).mergeMap(Rx.Observable.from).map(obj => Object.assign({},obj,{id:obj._id}));
+	    //	    selecteddb = id;
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/" + id + "/_design/view/_list/all/all"}))
+		.map(JSON.parse)
+		.mergeMap(data => {
+		    return Rx.Observable.from(data)
+		})
+		.map(obj => Object.assign({},obj,{id:obj._id}));
 	},
 
 	// get all known card sets

@@ -1,0 +1,16 @@
+version: "3"
+services:
+   deck-builder-app:
+      image: abstractalchemist/deck-builder:v1.0.0.0.x64
+      ports:
+         - "8080:80"
+   deck-builder:
+      image: couchdb
+      volumes:
+         - "deck-data:/var/lib/couchdb"
+      ports:
+         - "5984:5984"
+networks:
+   deck-network:
+volumes:
+   deck-data:
