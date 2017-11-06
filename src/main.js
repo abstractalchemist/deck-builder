@@ -89,7 +89,39 @@ class Main extends React.Component {
     }
 
     buildCardSet() {
-	return buildCardSet(Object.assign({}, this.state, {updateCardView:this.updateCardView.bind(this), filterCardSet:this.filterCardSet.bind(this),}))
+	return buildCardSet(Object.assign({}, this.state, {
+	    updateCardView:this.updateCardView.bind(this),
+	    filterCardSet:this.filterCardSet.bind(this),
+	    addhandler:this.addCardToDeck.bind(this),
+	    addhandler2:this.updateOwnership.bind(this),
+	    removehandler2:this.removeOwnership.bind(this),
+	    addFilterOptions:  [
+		    <Checkbox clickhandler={
+			evt => {
+			    this.setState({filter_to_deck:evt.currentTarget.checked})
+			    
+			}
+		    } label="Filter On Deck"/>,
+		    <Checkbox label="Filter Owned" value={this.state.filter_owned} clickhandler={
+			evt => {
+			    this.setState({filter_owned:evt.currentTarget.checked});
+			}
+		    }/>,
+		    <Checkbox label="Filter Unowned" value={this.state.filter_unowned} clickhandler={
+			evt => {
+			    this.setState({filter_unowned:evt.currentTarget.checked})
+			}
+		    }/>,
+		    <button className="mdl-button mdl-js-button mdl-button--raised" onClick={
+			evt => {
+			    Cards.export_card_list(this.state.cardset_coll.map( ({id}) => id))
+				.subscribe( ({url,data}) => {
+                               window.open(url + "?keys=" + data);
+				})
+                               
+			}
+		    }>Export View</button>]
+	}))
     }
 
 
