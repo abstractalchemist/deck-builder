@@ -1,4 +1,4 @@
-import { partitioncardsets, generateCard, generateDeckView } from '../src/utils'
+import { generateCard, generateDeckView } from '../src/utils'
 import { expect } from 'chai';
 import React from 'react';
 import { mount } from 'enzyme';
@@ -11,14 +11,6 @@ function Wrapper({children}) {
 
 describe('utils.js test', function() {
     
-    it('paritioncardsets', function() {
-	let tables = partitioncardsets([{id:1},{id:2},{id:3},{id:4},{id:5},{id:6},{id:7}], 3);
-	const obj = mount(<Wrapper>{tables}</Wrapper>);
-		
-	expect(obj).to.not.be.null;
-	expect(tables).to.have.lengthOf(3);
-    })
-
     it('generateCard', function() {
 	let cardgenerator = generateCard(
 	    _ => {

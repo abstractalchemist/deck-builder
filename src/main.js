@@ -3,9 +3,9 @@ import Deck from './deck_store';
 import Cards from './card_store';
 import Rx from 'rxjs/Rx';
 import {Nav,Drawer,Body,Menu,Card,SearchField} from 'ui-utils';
+import { buildCardSet, CardSetView, CardSetNameView } from 'weiss-utils'
 
-
-import { CardSetView, CardSetNameView, Checkbox, NameDialog, DeckSettingsDialog, DeckLevelView } from './card_utils';
+import { Checkbox, NameDialog, DeckSettingsDialog, DeckLevelView } from './card_utils';
 import { generateCard, generateDeckView } from './utils'
 
 /*
@@ -88,49 +88,10 @@ class Main extends React.Component {
 	
     }
 
-    // builds the top portion of the card set view
     buildCardSet() {
-	return (<div className="mdl-grid">
-		<div className="mdl-cell mdl-cell--6-col">
-		<CardSetNameView {...this.state} clickhandler={this.updateCardView.bind(this)} />
-		 
-		</div>
-		<div className="mdl-cell mdl-cell--6-col">
- 		<SearchField value={this.state.cardset_filter} changehandler={this.filterCardSet.bind(this)}/>
-		<Checkbox clickhandler={
-		    evt => {
-			this.setState({filter_to_deck:evt.currentTarget.checked})
-			
-		    }
-		} label="Filter On Deck"/>
-		<Checkbox label="Filter Owned" value={this.state.filter_owned} clickhandler={
-		    evt => {
-			this.setState({filter_owned:evt.currentTarget.checked});
-		    }
-		}/>
-		<Checkbox label="Filter Unowned" value={this.state.filter_unowned} clickhandler={
-		    evt => {
-			this.setState({filter_unowned:evt.currentTarget.checked})
-		    }
-		}/>
-		<button className="mdl-button mdl-js-button mdl-button--raised" onClick={
-		    evt => {
-			Cards.export_card_list(this.state.cardset_coll.map( ({id}) => id))
-			    .subscribe( ({url,data}) => {
-				window.open(url + "?keys=" + data);
-			    })
-				
-		    }
-		}>Export View</button>
-
-		</div>
-		
-		{( _ => {
-		    if(this.state.cardset && this.state.cardset_coll) 
-			return <CardSetView {...this.state} addhandler={this.addCardToDeck.bind(this)} addhandler2={this.updateOwnership.bind(this)} removehandler2={this.removeOwnership.bind(this)}/>;
-		})()}
-		</div>)
+	return buildCardSet(Object.assign({}, this.state, {updateCardView:this.updateCardView.bind(this), filterCardSet:this.filterCardSet.bind(this),}))
     }
+
 
     removeOwnership(evt) {
 	console.log(`removing ownership of ${evt.currentTarget.dataset.id}`);
