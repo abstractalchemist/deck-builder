@@ -94,6 +94,7 @@ class Main extends React.Component {
 	    filterCardSet:this.filterCardSet.bind(this),
 	    addhandler:this.addCardToDeck.bind(this),
 	    addhandler2:this.updateOwnership.bind(this),
+	    
 	    removehandler2:this.removeOwnership.bind(this),
 	    menuOpts:[{id:'tcgrepublic',label:'Search TCG Republic'},{id:'tcgplayer',label:'Search TCG Player'},{id:'amazon',label:"Search Amazon"}],
 	    menuHandler: card => {
@@ -108,6 +109,11 @@ class Main extends React.Component {
 		}
 	    },
 	    addFilterOptions:  [
+		    <Checkbox clickhandler={
+			evt => {
+			    this.setState({hide_name_view:evt.currentTarget.checked});
+			}
+		    } label="Hide Sets View"/>,
 		    <Checkbox clickhandler={
 			evt => {
 			    this.setState({filter_to_deck:evt.currentTarget.checked})
