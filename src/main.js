@@ -60,8 +60,8 @@ class Main extends React.Component {
 		err => {
 		    alert(`ownership update error ${err}`);
 		})
-			    
-								 
+	
+	
     }
 
     componentDidMount() {
@@ -74,8 +74,8 @@ class Main extends React.Component {
 	    data => {
 		this.setState({decks:data});
 	    })
-	    
-//	document.querySelectorAll("table > input
+	
+	//	document.querySelectorAll("table > input
 
     }
 
@@ -95,6 +95,18 @@ class Main extends React.Component {
 	    addhandler:this.addCardToDeck.bind(this),
 	    addhandler2:this.updateOwnership.bind(this),
 	    removehandler2:this.removeOwnership.bind(this),
+	    menuOpts:[{id:'tcgrepublic',label:'Search TCG Republic'},{id:'tcgplayer',label:'Search TCG Player'},{id:'amazon',label:"Search Amazon"}],
+	    menuHandler: card => {
+		return evt => {
+		    let target = evt.currentTarget.dataset.id;
+		    if(target === 'tcgrepublic')
+			window.open("https://tcgrepublic.com/product/text_search.html?q=" + encodeURIComponent(card.number));
+		    else if(target === 'tcgplayer')
+			window.open("https://www.google.com/search?q=" + encodeURIComponent("site:shop.tcgplayer.com \"" + card.number + "\" -\"Price Guide\""))
+		    else if(target === 'amazon')
+			window.open("https://www.google.com/search?q=" + encodeURIComponent("site:www.amazon.com \"" + card.number + "\""))
+		}
+	    },
 	    addFilterOptions:  [
 		    <Checkbox clickhandler={
 			evt => {
@@ -116,9 +128,9 @@ class Main extends React.Component {
 			evt => {
 			    Cards.export_card_list(this.state.cardset_coll.map( ({id}) => id))
 				.subscribe( ({url,data}) => {
-                               window.open(url + "?keys=" + data);
+				    window.open(url + "?keys=" + data);
 				})
-                               
+                            
 			}
 		    }>Export View</button>]
 	}))
@@ -164,7 +176,7 @@ class Main extends React.Component {
 	}
 	//	let target = targets[0];
 	let observable = Rx.Observable.merge.apply(undefined, targets.map(Cards.getcardsfromset));
-//	let observable = Cards.getcardsfromset(target);
+	//	let observable = Cards.getcardsfromset(target);
 	let buffer = [];
 	if(this.cardViewRetrieveHandle) {
 	    this.cardViewRetrieveHandle.unsubscribe();
@@ -181,7 +193,7 @@ class Main extends React.Component {
 		console.log(`error ${err}`);
 	    },
 	    _ => {
-//		console.log('update card view');
+		//		console.log('update card view');
 		this.setState({cardset:targets,cardset_coll:buffer,is_building:true});
 		let buffer2 = [];
 		this.ownershipRetrieveHandle = Rx.Observable.from(buffer)
@@ -240,7 +252,7 @@ class Main extends React.Component {
 			    //document.querySelector("#card_viewer").classList.remove("is-active");
 			    
 			});
-		
+		    
 		}
 		else
 		    alert("Card exists in deck");
@@ -342,22 +354,22 @@ class Main extends React.Component {
 		    evt => {
 			
 			this.setState({deck_input_name: evt.target.value});
-		
+			
 		    }
 		}
 		addhandler={
 		    _ => {
 			Deck.adddeck(this.state.deck_input_name)
 			    .mergeMap( _ => {
-			return Deck.getdecks();
+				return Deck.getdecks();
 			    })
 			    .subscribe(
 				decks => {
-			    let dialog = document.querySelector('#deck_name');
+				    let dialog = document.querySelector('#deck_name');
 				    
 				    dialog.close();
 				    
-			    this.setState({deck_input_name:"",decks});
+				    this.setState({deck_input_name:"",decks});
 				});
 		    }
 		} />
