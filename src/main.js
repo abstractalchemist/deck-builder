@@ -435,7 +435,7 @@ class Main extends React.Component {
     }
 
     render() {
-	return (<div className="mdl-layout mdl-js-layout">
+	return (<div className="mdl-layout mdl-js-layout mdl-layout--fixed-header">
 		<Nav title="Deck Builder" links={this.links} tabs={this.tabs}/>
 		<Drawer title="Deck Builder" links={this.links}/>
 		<Body>
