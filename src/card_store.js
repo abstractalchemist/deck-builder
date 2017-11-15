@@ -16,7 +16,7 @@ export default (function() {
 	    .catch(err => {
 		console.log(err)
 		if(window.localStorage)
-		    return Rx.Observable.from(window.localStorage.getItem('mapping'))
+		    return Rx.Observable.of(window.localStorage.getItem('mapping'))
 		throw err;
 	    })
 
@@ -49,7 +49,7 @@ export default (function() {
 	    
 	    .catch(err => {
 		if(window.localStorage) {
-		    return Rx.Observable.from(window.localStorage.getItem(card_id))
+		    return Rx.Observable.of(window.localStorage.getItem(card_id))
 		}
 		throw err
 	    })
@@ -127,7 +127,7 @@ export default (function() {
 
 		.catch(err => {
 		    if(window.localStorage) {
-			return Rx.Observable.from(window.localStorage.getItem(id))
+			return Rx.Observable.of(window.localStorage.getItem(id))
 		    }
 		    throw err
 		})
@@ -147,7 +147,7 @@ export default (function() {
 
 		.catch(err => {
 		    if(window.localStorage) {
-			return Rx.Observable.from(window.localStorage.getItem('sets'))
+			return Rx.Observable.of(window.localStorage.getItem('sets'))
 		    }
 		    else
 			throw err;
