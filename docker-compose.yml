@@ -9,7 +9,7 @@ services:
       ports:
          - "8081:80"
    weiss-assist-app:
-      image:abstractalchemist/attribute-tracker:x64_v3
+      image: abstractalchemist/attribute-tracker:x64_v3
       ports:
          - "8082:80"
    deck-builder:
