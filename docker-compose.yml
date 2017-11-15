@@ -4,6 +4,14 @@ services:
       image: abstractalchemist/deck-builder:v1.0.0.2.x64
       ports:
          - "8080:80"
+   simulator-app:
+      image: abstractalchemist/weiss-sim:v1.0.0.0.x64
+      ports:
+         - "8081:80"
+   weiss-assist-app:
+      image:abstractalchemist/attribute-tracker:x64_v3
+      ports:
+         - "8082:80"
    deck-builder:
       image: couchdb
       volumes:
