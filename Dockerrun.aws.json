@@ -13,6 +13,7 @@
 	    "name":"deck-builder-app",
 	    "image":"abstractalchemist/deck-builder:v1.0.0.2.x64",
 	    "essential":"true",
+	    "memory":128,
 	    "portMappings": [
 		{
 		    "hostPort":"8080",
@@ -27,6 +28,7 @@
 	    "name":"deck-builder",
 	    "image":"couchdb",
 	    "essential":"true",
+	    "memory":128,
 	    "mountPoints": [
 		{
 		    "sourceVolume":"db",
