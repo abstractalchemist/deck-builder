@@ -1,0 +1,38 @@
+{
+    "AWSEBDockerrunVersion" : 2,
+    "volumes" : [
+	{
+	    "name":"db",
+	    "host": {
+		"sourcePath":"/ecs/db"
+	    }
+	}
+    ],
+    "containerDefinitions": [
+	{
+	    "name":"deck-builder-app",
+	    "image":"abstractalchemist/deck-builder:v1.0.0.2.x64",
+	    "essential":"true",
+	    "portMappings": [
+		{
+		    "hostPort":"8080",
+		    "containerPort":"80"
+		}
+	    ],
+	    "links": [
+		"deck-builder"
+	    ]
+	},
+	{
+	    "name":"deck-builder",
+	    "image":"couchdb",
+	    "essential":"true",
+	    "mountPoints": [
+		{
+		    "sourceVolume":"db",
+		    "containerPath":"/usr/local/var/lib/couchdb"
+		}
+	    ]
+	}
+    ]
+}
