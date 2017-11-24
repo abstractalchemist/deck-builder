@@ -7,6 +7,7 @@ import { buildCardSet, CardSetView, CardSetNameView } from 'weiss-utils'
 
 import { Checkbox, NameDialog, DeckSettingsDialog, DeckLevelView } from './card_utils';
 import { generateCard, generateDeckView } from './utils'
+import FacebookLogin from './login'
 
 /*
  * state attributes
@@ -36,7 +37,9 @@ class Main extends React.Component {
 		     { id: "card_viewer",
 		       label : "Card Viewer",
 		       content : this.buildCardSet.bind(this) }]
-
+	window.__main_fbinit__ = _ => {
+	    this.onlogin()
+	}
 	
     }
 
@@ -65,6 +68,7 @@ class Main extends React.Component {
     }
 
     componentDidMount() {
+	this.onlogin();
 	Cards.getcardsets().subscribe(
 	    data => {
 		this.setState({cardsets:data});
@@ -92,10 +96,10 @@ class Main extends React.Component {
 	return buildCardSet(Object.assign({}, this.state, {
 	    updateCardView:this.updateCardView.bind(this),
 	    filterCardSet:this.filterCardSet.bind(this),
-	    addhandler:this.addCardToDeck.bind(this),
-	    addhandler2:this.updateOwnership.bind(this),
+	    addhandler:this.state.loggedIn ? this.addCardToDeck.bind(this) : undefined,
+	    addhandler2:this.state.loggedIn ? this.updateOwnership.bind(this) : undefined,
 	    
-	    removehandler2:this.removeOwnership.bind(this),
+	    removehandler2:this.state.loggedIn ? this.removeOwnership.bind(this) : undefined,
 	    menuOpts:[{id:'tcgrepublic',label:'Search TCG Republic'},{id:'tcgplayer',label:'Search TCG Player'},{id:'amazon',label:"Search Amazon"}],
 	    menuHandler: card => {
 		return evt => {
@@ -312,82 +316,109 @@ class Main extends React.Component {
 		});
 	}
     }
+
+    onlogin() {
+	if(typeof FB !== "undefined") {
+ 	    FB.getLoginStatus( ({status,authResponse}) => {
+		console.log(`user status ${status}`)
+		if(status === 'connected') {
+		    this.setState(({loggedIn:true}))
+		    window.sessionStorage.setItem('fb-token', authResponse.accessToken)
+		}
+		else {
+		    this.setState(({loggedIn:false}))
+		    window.sessionStorage.removeItem('fb-token')
+		}
+	    })
+	}
+
+    }
     
     buildDeck() {
+	if(!this.state.loggedIn) {
+	    return (<div className="mdl-grid">
+		    <div className="mdl-cell mdl-cell---12-col">
+		    <FacebookLogin onlogin={this.onlogin.bind(this)}/>
+		    </div>
+		    </div>)
+	}
+	else {
+	    return (<div className="mdl-grid">
+		    <div className="mdl-cell mdl-cell---12-col">
+		    <FacebookLogin onlogin={this.onlogin.bind(this)}/>
+		    </div>
+		    <div className="mdl-cell mdl-cell--12-col">
+		    { /* add deck ids here */}
 
-	return (<div className="mdl-grid">
-		<div className="mdl-cell mdl-cell--12-col">
-		{ /* add deck ids here */}
-
-		<button className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
-		    ( evt => {
-			let dialog = document.querySelector('#deck_settings');
-			if(!dialog.showModal)
-			    dialogPolyfill.registerDialog(dialog);
-			dialog.showModal();
-		    })}>
-		Deck Settings
-		</button>
-		<button className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
-		    evt => {
-			Deck.updatedeck(this.state.deck_id, this.state.deck).subscribe(
-			    _ => {
-				alert("save successful");
-			    },
-			    err => {
-				alert("Error: " + err);
-			    });
-		    }
-		}>
-		Save Settings
-		</button>
-
-
-		<DeckLevelView {...this.state} />
-		<div className="mdl-textfield mdl-js-textfield">
-		<label htmlFor="deck_label" className="mdl-textfield__label">{this.state.deck_name}</label>
-		<input id="deck_label" className="mdl-textfield__input"></input>
-		</div>
-		<Checkbox clickhandler={
-		    evt => {
-			this.setState({flush_display:!evt.currentTarget.checked});
-		    }
-		}
-		label="Split On Level"/>
-		</div>
-		<DeckSettingsDialog {...this.state} deletehandler={this.deleteDeck.bind(this)} clickhandler={this.updateDeckView.bind(this)}/>
-		<NameDialog {...this.state} changehandler={
-		    evt => {
-			
-			this.setState({deck_input_name: evt.target.value});
-			
-		    }
-		}
-		addhandler={
-		    _ => {
-			Deck.adddeck(this.state.deck_input_name)
-			    .mergeMap( _ => {
-				return Deck.getdecks();
-			    })
-			    .subscribe(
-				decks => {
-				    let dialog = document.querySelector('#deck_name');
-				    
-				    dialog.close();
-				    
-				    this.setState({deck_input_name:"",decks});
+		    <button className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
+			( evt => {
+			    let dialog = document.querySelector('#deck_settings');
+			    if(!dialog.showModal)
+				dialogPolyfill.registerDialog(dialog);
+			    dialog.showModal();
+			})}>
+		    Deck Settings
+		    </button>
+		    <button className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
+			evt => {
+			    Deck.updatedeck(this.state.deck_id, this.state.deck).subscribe(
+				_ => {
+				    alert("save successful");
+				},
+				err => {
+				    alert("Error: " + err);
 				});
+			}
+		    }>
+		    Save Settings
+		    </button>
+
+
+		    <DeckLevelView {...this.state} />
+		    <div className="mdl-textfield mdl-js-textfield">
+		    <label htmlFor="deck_label" className="mdl-textfield__label">{this.state.deck_name}</label>
+		    <input id="deck_label" className="mdl-textfield__input"></input>
+		    </div>
+		    <Checkbox clickhandler={
+			evt => {
+			    this.setState({flush_display:!evt.currentTarget.checked});
+			}
 		    }
-		} />
-		
-		{( _ => {
-		    if(this.state.deck) 
-			return generateDeckView(this.state.deck, this.state.flush_display, this.updateCardCount.bind(this), this.removeCardFromDeck.bind(this));
-		})()
-		}
-		
-		</div>)
-	
+		    label="Split On Level"/>
+		    </div>
+		    <DeckSettingsDialog {...this.state} deletehandler={this.deleteDeck.bind(this)} clickhandler={this.updateDeckView.bind(this)}/>
+		    <NameDialog {...this.state} changehandler={
+			evt => {
+			    
+			    this.setState({deck_input_name: evt.target.value});
+			    
+			}
+		    }
+		    addhandler={
+			_ => {
+			    Deck.adddeck(this.state.deck_input_name)
+				.mergeMap( _ => {
+				    return Deck.getdecks();
+				})
+				.subscribe(
+				    decks => {
+					let dialog = document.querySelector('#deck_name');
+					
+					dialog.close();
+					
+					this.setState({deck_input_name:"",decks});
+				    });
+			}
+		    } />
+		    
+		    {( _ => {
+			if(this.state.deck) 
+			    return generateDeckView(this.state.deck, this.state.flush_display, this.updateCardCount.bind(this), this.removeCardFromDeck.bind(this));
+		    })()
+		    }
+		    
+		    </div>)
+	}	    
     }	
     
 

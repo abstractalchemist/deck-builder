@@ -19,6 +19,10 @@ window.Math = global.Math
 //global.window.location.href = "http://localhost:8080"
 // this tells the DOM ( if it needs to know ) that it is in test mode
 global.__testing__ = true;
+global.FB = {
+    getLoginStatus() {
+    }
+}
 global.XMLHttpRequest = function() {
     this.open = function() {
     }

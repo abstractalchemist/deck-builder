@@ -6,6 +6,32 @@
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
   </head>
   <body>
+
+    
+    <script>
+      window.fbAsyncInit = function() {
+      FB.init({
+      appId      : '878827095603077',
+      cookie     : true,
+      xfbml      : true,
+      version    : 'v2.11'
+      });
+      
+      FB.AppEvents.logPageView();   
+      window.dispatchEvent(new CustomEvent('fbinit'));
+      window.__main_fbinit__()
+      document.querySelector(".fb-login-button").setAttribute('onlogin','window.__facebook_login__()')
+      };
+      
+
+      (function(d, s, id){
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) {return;}
+      js = d.createElement(s); js.id = id;
+      js.src = "https://connect.facebook.net/en_US/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+    </script>
     <div id="content" ></div>
     <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
     <script src="bundle.js"></script>

@@ -4,6 +4,19 @@ import Http from 'utils';
 export default (function() {
     //    let decks = [{id:1,label:"Testing"}];
     let selecteddeck, selectedrev;
+
+    const getsecurityheaders = function() {
+	let headers = {}
+	if(window.sessionStorage) {
+	    let session = window.sessionStorage.getItem('fb-token')
+	 
+	    if(session)
+		headers = { TOKEN : session, 'content-type':'application/json' }
+
+	}
+	return headers;
+    }
+    
     return {
 
 	adddeck(name) {
@@ -13,25 +26,28 @@ export default (function() {
 //		observer.onNext();
 //		observer.onCompleted();
 	    //	    })
-	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/_uuids"}))
+	    let headers = getsecurityheaders()
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/_uuids",headers}))
 		.map(JSON.parse)
 		.pluck('uuids')
 		.mergeMap(uuid => {
-		    return Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/decks/" + uuid},JSON.stringify({label:name,deck:[]})));
+		    return Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/decks/" + uuid,headers},JSON.stringify({label:name,deck:[]})));
 				
 		})
 	},
 	getdecks() {
 	    //	    return Rx.Observable.from(decks).toArray();
-	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/_design/view/_list/all/all"}))
+	    let headers = getsecurityheaders()
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/_design/view/_list/all/all",headers}))
 		.map(JSON.parse)
 		.mergeMap(Rx.Observable.from)
 		.map(obj => Object.assign({},obj,{ id: obj._id }))
 		.toArray();
 	},
 	getdeck(id) {
+	    let headers = getsecurityheaders()
 	    selecteddeck = id;
-	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/" + id}))
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/" + id,headers}))
 		.map(JSON.parse)
 		.map(obj => Object.assign({},obj,{id:obj._id}))
 //	    return Rx.Observable.create(observer => {
@@ -45,10 +61,12 @@ export default (function() {
 	},
 	
 	updatedeck(id,deck) {
+	    let headers = getsecurityheaders()
+	    
 	    let reduced = deck.map(({id,count}) => {
 		return {id,count}
 	    })
-	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/" + id}))
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/" + id,headers}))
 		.map(JSON.parse)
 		.mergeMap( ({ _rev, _id, label}) => {
 		    return Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/decks/" + id},
@@ -60,9 +78,10 @@ export default (function() {
 	},
 
 	deleteDeck(id) {
+	    let headers = getsecurityheaders()
 	    if(selecteddeck == id)
 		selecteddeck = {};
-	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/" + id}))
+	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/" + id, headers}))
 		.map(JSON.parse)
 		.mergeMap(({_rev,_id}) => {
 		    return Rx.Observable.fromPromise(Http({method:"DELETE",url:"/api/decks/"+id+"?rev=" + _rev}))
