@@ -236,7 +236,8 @@ class Main extends React.Component {
 			    console.log(`error ${err}`);
 			},
 			_ => {
-			    
+
+			    buffer2.sort( ( {id:id1},{id:id2} ) => id1.localeCompare(id2))
 			    this.setState({is_building:undefined,cardset_coll:buffer2});
 			})
  	    })
