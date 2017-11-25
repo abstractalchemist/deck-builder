@@ -40,7 +40,7 @@ function NameDialog({deck_input_name, changehandler, addhandler}) {
 
 }
 
-function DeckSettingsDialog({decks,deletehandler,clickhandler}) {
+function DeckSettingsDialog({decks,deletehandler,clickhandler,deck_id}) {
     return (<dialog id='deck_settings' className="mdl-dialog">
 	    <div className="mdl-dialog__content">
 	    <ul className="mdl-list">
@@ -76,6 +76,16 @@ function DeckSettingsDialog({decks,deletehandler,clickhandler}) {
 		}
 	    })()}
 	    </ul>
+	    <p>
+	    Please click on the icon next to the deck name in order to load a deck.
+	    </p>
+	    
+	    {( _ => {
+		if(!deck_id) {
+		    return <p>You need to load a deck in order to start adding cards to it</p>
+		}
+	    })()
+	    }
 	    </div>
 	    <div className="mdl-dialog__actions mdl-dialog__actions--full-width">
 	    <button className="mdl-button mdl-js-button" onClick={
