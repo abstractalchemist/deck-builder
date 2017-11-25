@@ -12,8 +12,8 @@
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
     "rxjs": "^5.5.0",
-    "ui-utils": "git+https://git@github.com/abstractalchemist/ui-utils.git#v0.0.0.5",
-    "utils": "git+https://git@github.com/abstractalchemist/utils.git#v0.0.0.2",
+    "ui-utils": "git+https://git@github.com/abstractalchemist/ui-utils.git",
+    "utils": "git+https://git@github.com/abstractalchemist/utils.git",
     "weiss-utils": "git+https://git@github.com/abstractalchemist/weiss-utils.git"
   },
   "devDependencies": {
