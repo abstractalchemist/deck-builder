@@ -2,10 +2,12 @@ import React from 'react';
 
 import { Card } from 'ui-utils'
 
-function Checkbox({clickhandler,label,value,id}) {
+function Checkbox({clickhandler,label,value,id,tooltip}) {
+    let label_id = `label-id-${id}`
     return(<label className="mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect" htmlFor={id}>
 	   <input type="checkbox" value={value} id={id} className="mdl-checkbox__input" onClick={clickhandler}></input>
-	   <span className="mdl-checkbox__label">{label}</span>
+	   <span className="mdl-checkbox__label" id={label_id}>{label}</span>
+	   <div className="mdl-tooltip" htmlFor={label_id}>{tooltip}</div>
 	   </label>)
 
 }
@@ -59,10 +61,11 @@ function DeckSettingsDialog({decks,deletehandler,clickhandler}) {
 					else
 					    console.log("dialog not found;  either in test mode or query is wrong")
 				    }
- 				}>
+ 				} id={`span-click-${id}`}>
 				<i className="material-icons mdl-list__item-icon">view_stream</i>
 				{label}
 				</span>
+				<div className="mdl-tooltip" htmlFor={`span-click-${id}`}>{`Set As ${label} as Current Deck`}</div>
 				<span className="mdl-list__item-secondary-action">
 				<button data-id={id} className="mdl-button mdl-js-button" onClick={deletehandler}>
 				Delete
@@ -82,7 +85,7 @@ function DeckSettingsDialog({decks,deletehandler,clickhandler}) {
 			dialogPolyfill.registerDialog(dialog)
 		    dialog.showModal();
 		}}>
-	    Add Deck
+	    Create New Deck
 	    </button>
 	    <button className="mdl-button mdl-js-button" onClick={
 		(evt => {

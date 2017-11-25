@@ -73,11 +73,6 @@ class Main extends React.Component {
 	    data => {
 		this.setState({cardsets:data});
 	    });
-
-	Deck.getdecks().subscribe(
-	    data => {
-		this.setState({decks:data});
-	    })
 	
 	//	document.querySelectorAll("table > input
 
@@ -93,14 +88,51 @@ class Main extends React.Component {
     }
 
     buildCardSet() {
+	let show_opts = [
+	    	<Checkbox clickhandler={
+		    evt => {
+			this.setState({hide_name_view:evt.currentTarget.checked});
+		    }
+		} label="Hide Sets View" id="hide-name-view"/>,
+		<button id="export-card-list" className="mdl-button mdl-js-button mdl-button--raised" onClick={
+		    evt => {
+			Cards.export_card_list(this.state.cardset_coll.map( ({id}) => id))
+			    .subscribe( ({url,data}) => {
+				window.open(url + "?keys=" + data);
+			    })
+                        
+		    }
+		}>Export View</button>
+	]
+	if(this.state.loggedIn)
+	    show_opts = show_opts.concat([
+		    <Checkbox clickhandler={
+			evt => {
+			    this.setState({filter_to_deck:evt.currentTarget.checked})
+			    
+			}
+		    } label="Show Only Cards In Deck" {...show_opts} id="filter-deck-option"/>,
+		    <Checkbox label="Show Only Owned Cards" value={this.state.filter_owned} clickhandler={
+			evt => {
+			    this.setState({filter_owned:evt.currentTarget.checked});
+			}
+		    } id="filter-owned-option"/>,
+		    <Checkbox label="Show Only Unowned Cards" value={this.state.filter_unowned} clickhandler={
+			evt => {
+			    this.setState({filter_unowned:evt.currentTarget.checked})
+			}
+		    } id="filter-unowned-option" />,
+		
+	    ])
+
 	return buildCardSet(Object.assign({}, this.state, {
 	    updateCardView:this.updateCardView.bind(this),
 	    filterCardSet:this.filterCardSet.bind(this),
-	    addhandler:this.state.loggedIn ? this.addCardToDeck.bind(this) : undefined,
-	    addhandler2:this.state.loggedIn ? this.updateOwnership.bind(this) : undefined,
+	    addhandler:(this.state.loggedIn && this.state.deck_id) ? { handler: this.addCardToDeck.bind(this), tooltip: "Add Card To Current Deck" }: undefined,
+	    addhandler2:this.state.loggedIn ? { handler: this.updateOwnership.bind(this), tooltip: "Add Card To Library" }: undefined,
 	    
-	    removehandler2:this.state.loggedIn ? this.removeOwnership.bind(this) : undefined,
-	    menuOpts:[{id:'tcgrepublic',label:'Search TCG Republic'},{id:'tcgplayer',label:'Search TCG Player'},{id:'amazon',label:"Search Amazon"}],
+	    removehandler2:this.state.loggedIn ? { handler : this.removeOwnership.bind(this), tooltip:"Remove From Library" } : undefined,
+	    menuOpts:[{id:'tcgrepublic',label:'Search TCG Republic'},{id:'tcgplayer',label:'Search TCG Player'},{id:'amazon',label:"Search Amazon"},{id:'ideal808',label:"Search Ideal 808"}],
 	    menuHandler: card => {
 		return evt => {
 		    let target = evt.currentTarget.dataset.id;
@@ -110,39 +142,11 @@ class Main extends React.Component {
 			window.open("https://www.google.com/search?q=" + encodeURIComponent("site:shop.tcgplayer.com \"" + card.number + "\" -\"Price Guide\""))
 		    else if(target === 'amazon')
 			window.open("https://www.google.com/search?q=" + encodeURIComponent("site:www.amazon.com \"" + card.number + "\""))
+		    else if(target === 'ideal808')
+			window.open("https://www.google.com/search?q=" + encodeURIComponent("site:www.ideal808.com \"" + card.number + "\" -\"tour guide\""))
 		}
 	    },
-	    addFilterOptions:  [
-		    <Checkbox clickhandler={
-			evt => {
-			    this.setState({hide_name_view:evt.currentTarget.checked});
-			}
-		    } label="Hide Sets View"/>,
-		    <Checkbox clickhandler={
-			evt => {
-			    this.setState({filter_to_deck:evt.currentTarget.checked})
-			    
-			}
-		    } label="Filter On Deck"/>,
-		    <Checkbox label="Filter Owned" value={this.state.filter_owned} clickhandler={
-			evt => {
-			    this.setState({filter_owned:evt.currentTarget.checked});
-			}
-		    }/>,
-		    <Checkbox label="Filter Unowned" value={this.state.filter_unowned} clickhandler={
-			evt => {
-			    this.setState({filter_unowned:evt.currentTarget.checked})
-			}
-		    }/>,
-		    <button className="mdl-button mdl-js-button mdl-button--raised" onClick={
-			evt => {
-			    Cards.export_card_list(this.state.cardset_coll.map( ({id}) => id))
-				.subscribe( ({url,data}) => {
-				    window.open(url + "?keys=" + data);
-				})
-                            
-			}
-		    }>Export View</button>]
+	    addFilterOptions:  show_opts
 	}))
     }
 
@@ -324,13 +328,28 @@ class Main extends React.Component {
 		if(status === 'connected') {
 		    this.setState(({loggedIn:true}))
 		    window.sessionStorage.setItem('fb-token', authResponse.accessToken)
+	
+		    Deck.getdecks().subscribe(
+			data => {
+			    this.setState({decks:data});
+			})
+
 		}
 		else {
-		    this.setState(({loggedIn:false}))
+		    this.setState({loggedIn:false,decks:undefined, filter_to_deck:false, filter_owned:false, filter_unowned:false})
+		    
 		    window.sessionStorage.removeItem('fb-token')
+		    
 		}
 	    })
 	}
+	else {
+ 	    this.setState({loggedIn:false,decks:undefined, filter_to_deck:false, filter_owned:false, filter_unowned:false})
+	    
+	    window.sessionStorage.removeItem('fb-token')
+	    
+	}
+
 
     }
     
@@ -343,6 +362,10 @@ class Main extends React.Component {
 		    </div>)
 	}
 	else {
+	    let save_opts = { disabled: "true" }
+	    if(this.state.deck_id)
+		save_opts = { enabled: "true" }
+	    
 	    return (<div className="mdl-grid">
 		    <div className="mdl-cell mdl-cell---12-col">
 		    <FacebookLogin onlogin={this.onlogin.bind(this)}/>
@@ -350,16 +373,16 @@ class Main extends React.Component {
 		    <div className="mdl-cell mdl-cell--12-col">
 		    { /* add deck ids here */}
 
-		    <button className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
+		    <button id="deck-settings" className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
 			( evt => {
 			    let dialog = document.querySelector('#deck_settings');
 			    if(!dialog.showModal)
 				dialogPolyfill.registerDialog(dialog);
 			    dialog.showModal();
 			})}>
-		    Deck Settings
+		    Manage Decks
 		    </button>
-		    <button className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
+		    <button id="save-settings" className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
 			evt => {
 			    Deck.updatedeck(this.state.deck_id, this.state.deck).subscribe(
 				_ => {
@@ -369,8 +392,8 @@ class Main extends React.Component {
 				    alert("Error: " + err);
 				});
 			}
-		    }>
-		    Save Settings
+		    } {...save_opts}>
+		    Save Current Deck
 		    </button>
 
 

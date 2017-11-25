@@ -69,7 +69,7 @@ export default (function() {
 	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/" + id,headers}))
 		.map(JSON.parse)
 		.mergeMap( ({ _rev, _id, label}) => {
-		    return Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/decks/" + id},
+		    return Rx.Observable.fromPromise(Http({method:"PUT",url:"/api/decks/" + id, headers},
 							  JSON.stringify({
 							      deck: reduced,
 							      label: label,
@@ -84,7 +84,7 @@ export default (function() {
 	    return Rx.Observable.fromPromise(Http({method:"GET",url:"/api/decks/" + id, headers}))
 		.map(JSON.parse)
 		.mergeMap(({_rev,_id}) => {
-		    return Rx.Observable.fromPromise(Http({method:"DELETE",url:"/api/decks/"+id+"?rev=" + _rev}))
+		    return Rx.Observable.fromPromise(Http({method:"DELETE",url:"/api/decks/"+id+"?rev=" + _rev,headers}))
 		});
 	}
     };

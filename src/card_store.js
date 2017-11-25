@@ -8,6 +8,17 @@ export default (function() {
 		   {id:"069",level:3,image:"https://images.littleakiba.com/tcg/card37073-medium.jpg"},
 		   {id:"010",level:3,image:"https://images.littleakiba.com/tcg/card37016-medium.jpg"}]
     let selecteddb;
+    const getsecurityheaders = function() {
+	let headers = {}
+	if(window.sessionStorage) {
+	    let session = window.sessionStorage.getItem('fb-token')
+	 
+	    if(session)
+		headers = { TOKEN : session, 'content-type':'application/json' }
+
+	}
+	return headers;
+    }
 
 
     // this is a reverse mapper
@@ -65,17 +76,18 @@ export default (function() {
     return {
 
 	removefromcollection(card_id) {
-	    return Rx.Observable.from(Http({method:"GET",url:"/api/library/" + card_id}))
+	    let headers = getsecurityheaders()
+	    return Rx.Observable.from(Http({method:"GET",url:"/api/library/" + card_id, headers}))
 		.catch(_ => {
 		    return Rx.Observable.of();
 		})
 		.map(JSON.parse)
 		.mergeMap(({count,_rev}) => {
 		    if(count === 1)
-			return Http({method:"DELETE",url:"/api/library/"+card_id+"?rev=" + _rev})
+			return Http({method:"DELETE",url:"/api/library/"+card_id+"?rev=" + _rev,headers})
 		    else
 			    
-			return Http({method:"PUT",url:"/api/library/"+card_id}, JSON.stringify({count:count-1,_rev}))
+			return Http({method:"PUT",url:"/api/library/"+card_id, headers}, JSON.stringify({count:count-1,_rev}))
 		})
 			
 	},
@@ -93,18 +105,21 @@ export default (function() {
 		
 	},
 	addtocollection(card_id) {
-	    return Rx.Observable.from(Http({method:"GET",url:"/api/library/" + card_id}))
+	    let headers = getsecurityheaders()
+	    return Rx.Observable.from(Http({method:"GET",url:"/api/library/" + card_id, headers}))
 		.map(JSON.parse)
-		.mergeMap(({count,_rev}) => Http({method:"PUT",url:"/api/library/" + card_id}, JSON.stringify({count:count+1,_rev})))
-		.catch(_ => Rx.Observable.from(Http({method:"PUT",url:"/api/library/" + card_id}, JSON.stringify({count:1}))));
+		.mergeMap(({count,_rev}) => Http({method:"PUT",url:"/api/library/" + card_id, headers}, JSON.stringify({count:count+1,_rev})))
+		.catch(_ => Rx.Observable.from(Http({method:"PUT",url:"/api/library/" + card_id, headers}, JSON.stringify({count:1}))));
 	},
 	
 	getownership(card_id) {
 	    if(!card_id)
 		throw "Card Id not provided"
-	    return Rx.Observable.from(Http({method:"GET",url:"/api/library/" + card_id.toLowerCase().replace(/\/|-/g,"_")}))
+	    let headers = getsecurityheaders()
+	    return Rx.Observable.from(Http({method:"GET",url:"/api/library/" + card_id.toLowerCase().replace(/\/|-/g,"_"), headers}))
 		.map(JSON.parse)
 		.catch(_ => Rx.Observable.from(Http({method:"GET", url:"/api-dyn/price/" + card_id}))
+		       .timeout(500)
 		       .catch(err => Rx.Observable.of("No Price found"))
 	    	       .map(price => {
 	    		   return { count: 0, price }
