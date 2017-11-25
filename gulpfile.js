@@ -27,7 +27,7 @@ gulp.task('connect', ['js', 'cp'], function() {
 })
 
 gulp.task('cp', function() {
-    return gulp.src('public/index.html').pipe(gulp.dest('build'));
+    return gulp.src(['public/index.html','public/welcome.png']).pipe(gulp.dest('build'));
 })
 
 gulp.task('build', ['js','cp']);

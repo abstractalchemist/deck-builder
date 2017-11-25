@@ -78,6 +78,7 @@ class Main extends React.Component {
 	let elem =  document.querySelector(".fb-login-button")
 	if(elem)
 	    elem.setAttribute('onlogin','window.__facebook_login__()')
+	
     }
 
     componentDidUpdate() {
@@ -361,9 +362,26 @@ class Main extends React.Component {
     
     buildDeck() {
 	if(!this.state.loggedIn) {
-	    return (<div className="mdl-grid">
+	    return (<div className="mdl-grid" style={{display:"table"}}>
 		    <div className="mdl-cell mdl-cell---12-col">
-		    <FacebookLogin onlogin={this.onlogin.bind(this)}/>
+		    <div className="mdl-card mdl-shadow--2dp" style={{width:"600px",height:"700px"}}>
+		    
+		    <div className="mdl-card__title mdl-card--expand">
+		    <div className="mdl-grid" style={{width:"100%",height:"100%"}}>
+		    <div className="mdl-cell mdl-cell--4-col" style={{display:"flex", alignItems:"center"}}>
+ 		    <h2>Weiss Deck Builder</h2>
+		    </div>
+
+		    <div style={{background: "url('welcome.png') center/cover"}} className="mdl-cell mdl-cell--8-col"/>
+		    </div>
+		    </div>
+
+		    <div className="mdl-card__supporting-text">
+		    This Application uses the Facebook account to identify you and store your saved decks and library so you can access it the next time you login into this application
+		    </div>
+
+		    </div>
+
 		    </div>
 		    </div>)
 	}
@@ -374,7 +392,6 @@ class Main extends React.Component {
 	    
 	    return (<div className="mdl-grid">
 		    <div className="mdl-cell mdl-cell---12-col">
-		    <FacebookLogin onlogin={this.onlogin.bind(this)}/>
 		    </div>
 		    <div className="mdl-cell mdl-cell--12-col">
 		    { /* add deck ids here */}
@@ -496,7 +513,9 @@ class Main extends React.Component {
 
     render() {
 	return (<div className="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-		<Nav title="Deck Builder" links={this.links} tabs={this.tabs}/>
+		<Nav title="Deck Builder" links={this.links} tabs={this.tabs}>
+		<FacebookLogin onlogin={this.onlogin.bind(this)}/>
+		</Nav>
 		<Drawer title="Deck Builder" links={this.links}/>
 		<Body>
 		{this.generateTabs()}
