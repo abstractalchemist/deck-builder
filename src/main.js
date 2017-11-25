@@ -75,11 +75,17 @@ class Main extends React.Component {
 	    });
 	
 	//	document.querySelectorAll("table > input
-
+	let elem =  document.querySelector(".fb-login-button")
+	if(elem)
+	    elem.setAttribute('onlogin','window.__facebook_login__()')
     }
 
     componentDidUpdate() {
 	componentHandler.upgradeDom();
+	let elem =  document.querySelector(".fb-login-button")
+	if(elem)
+	    elem.setAttribute('onlogin','window.__facebook_login__()')
+
     }
     
     filterCardSet(evt) {

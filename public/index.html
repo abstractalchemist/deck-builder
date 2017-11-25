@@ -18,9 +18,9 @@
       });
       
       FB.AppEvents.logPageView();   
-      window.dispatchEvent(new CustomEvent('fbinit'));
-      window.__main_fbinit__()
-      document.querySelector(".fb-login-button").setAttribute('onlogin','window.__facebook_login__()')
+      window.dispatchEvent(new CustomEvent('fbinit', FB));
+//      window.__main_fbinit__()
+//      document.querySelector(".fb-login-button").setAttribute('onlogin','window.__facebook_login__()')
       };
       
 
