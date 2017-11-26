@@ -64,7 +64,7 @@ class Main extends React.Component {
 		    alert(`ownership update error ${err}`);
 		})
 	
-	
+ 	
     }
 
     componentDidMount() {
@@ -79,7 +79,7 @@ class Main extends React.Component {
 	if(elem)
 	    elem.setAttribute('onlogin','window.__facebook_login__()')
 	
-    }
+     }
 
     componentDidUpdate() {
 	componentHandler.upgradeDom();
@@ -186,7 +186,8 @@ class Main extends React.Component {
 	//	let target = evt.target.dataset.id;
 	//	let
 
-	let selected = document.querySelectorAll("#cardset-selector tr.is-selected td:nth-child(2)");
+	//	let selected = document.querySelectorAll("#cardset-selector tr.is-selected td:nth-child(2)");
+	let selected = document.querySelectorAll('.cardset-selector label.is-checked')
 	let targets = [];
 	if(selected) {
 	    for(let i = 0; i < selected.length; ++i) {
@@ -363,17 +364,17 @@ class Main extends React.Component {
     
     buildDeck() {
 	if(!this.state.loggedIn) {
-	    return (<div className="mdl-grid" style={{display:"table"}}>
+	    return (<div className="mdl-grid login-grid">
 		    <div className="mdl-cell mdl-cell---12-col">
-		    <div className="mdl-card mdl-shadow--2dp" style={{width:"600px",height:"700px"}}>
+		    <div className="mdl-card mdl-shadow--2dp login-display">
 		    
 		    <div className="mdl-card__title mdl-card--expand">
 		    <div className="mdl-grid" style={{width:"100%",height:"100%"}}>
-		    <div className="mdl-cell mdl-cell--4-col" style={{display:"flex", alignItems:"center"}}>
+		    <div className="mdl-cell mdl-cell--4-col mdl-cell--1-col-phone mdl-cell--2-col-tablet" style={{display:"flex", alignItems:"center"}}>
  		    <h2>Weiss Deck Builder</h2>
 		    </div>
 
-		    <div style={{background: "url('welcome.png') center/cover"}} className="mdl-cell mdl-cell--8-col"/>
+		    <div style={{background: "url('welcome.png') center/cover"}} className="mdl-cell mdl-cell--8-col mdl-cell--3-col-phone mdl-cell--6-col-tablet"/>
 		    </div>
 		    </div>
 

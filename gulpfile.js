@@ -27,7 +27,7 @@ gulp.task('connect', ['js', 'cp'], function() {
 })
 
 gulp.task('cp', function() {
-    return gulp.src(['public/index.html','public/welcome.png']).pipe(gulp.dest('build'));
+    return gulp.src(['public/index.html','public/welcome.png','public/public.css']).pipe(gulp.dest('build'));
 })
 
 gulp.task('build', ['js','cp']);
@@ -35,7 +35,7 @@ gulp.task('build', ['js','cp']);
 gulp.task('default',['js', 'cp'], function() {
     
 
-    const w = gulp.watch(['src/**/*.js','test/**/*.js'], ['js','cp']);
+    const w = gulp.watch(['src/**/*.js','test/**/*.js','public/*css'], ['js','cp']);
     w.on('error', function(err) {
 	console.log(err);
     })

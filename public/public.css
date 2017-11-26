@@ -1,0 +1,84 @@
+.card-set-view {
+}
+
+.card-set-names {
+}
+
+.card-set-cell {
+    max-width:250px;
+}
+
+.login-grid {
+    diplay:flex;
+    align-content:center;
+    justify-content:center;
+}
+
+.alt-display {
+    display: none;
+}
+
+.cardset-selector  .mdl-cell {
+    width:100%;
+    display:flex;
+    overflow-x:scroll;
+}
+
+.card-set-label {
+    flex: 0 1 200px;
+    min-width: 150px;
+    margin: 20 20 20 20;
+    min-height:200px;
+    max-height:200px;
+}
+
+.card-set-label .mdl-card__title {
+    height: 70%;
+}
+
+
+.card-set-label .mdl-card__title-text {
+    font-size:20px;
+}
+
+.login-display {
+    height:600px;
+    width:700px;
+}
+
+.card-set-cell .mdl-card__supporting-text p {
+    font-size:10px;
+    line-height:12px;
+}
+
+@media only screen and (max-width: 768px) {
+    .card-set-label {
+	flex: 0 1 200px;
+	min-width: 150px;
+	margin: 10 10 10 10;
+	min-height:100px;
+	max-height:100px;
+    }
+
+    .card-set-label .mdl-card__title {
+	height: 70%;
+    }
+
+
+    .card-set-label .mdl-card__title-text {
+	font-size:15px;
+    }
+    .login-display {
+    	height:100%;
+    	width:100%;
+    }
+
+    .login-display h2 {
+	font-size:20px;
+    }
+
+    .card-set-cell .mdl-card__supporting-text {
+	display:none;
+    }
+
+}
