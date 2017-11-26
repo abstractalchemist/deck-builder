@@ -33,7 +33,7 @@
 }
 
 .card-set-label .mdl-card__title {
-    height: 70%;
+/*    height: 70%; */
 }
 
 
@@ -61,7 +61,7 @@
     }
 
     .card-set-label .mdl-card__title {
-	height: 70%;
+/*	height: 70%; */
     }
 
 
@@ -81,4 +81,11 @@
 	display:none;
     }
 
+    .alt-display {
+	display:inherit;
+    }
+
+    .card-set-view .mdl-card .mdl-card__actions {
+    	display:inherit;
+    }
 }

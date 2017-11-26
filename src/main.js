@@ -514,13 +514,48 @@ class Main extends React.Component {
     }
 
     render() {
-	return (<div className="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+	return (<div className="mdl-layout mdl-js-layout mdl-layout__header--scroll">
 		<Nav title="Deck Builder" links={this.links} tabs={this.tabs}>
 		<FacebookLogin onlogin={this.onlogin.bind(this)}/>
 		</Nav>
+		<div className="mdl-layout--large-screen-only">
 		<Drawer title="Deck Builder" links={this.links}/>
+		</div>
 		<Body>
-		{this.generateTabs()}
+		{( _ => {
+		    if(screen.width < 768) {
+			return <FacebookLogin onlogin={this.onlogin.bind(this)}/>
+		    }
+		})()}
+		{(_ => {
+		    if(screen.width <= 768) {
+			return (<div className="mdl-tabs mdl-js-tabs mdl-layout--small-screen-only">
+				<div className="mdl-tabs__tab-bar">
+				{( _ => {
+				    return this.tabs.map( ({id,label}) => {
+					return <a href={`#${id}-small`} className="mdl-tabs__tab">{label}</a>
+				    })
+				})()}
+				
+				</div>
+				{( _ => {
+				    return this.tabs.map( ({id,content}) => {
+					return (<div className="mdl-tabs__panel" id={`${id}-small`}>
+						{content()}
+						</div>)
+				    })
+				})()}
+				</div>)
+		    }
+		})()}
+
+		{(_ => {
+		    if(screen.height >= 768) {
+			return (<div className="mdl-layout--large-screen-only">
+				{this.generateTabs()}
+				</div>)
+		    }
+		})()}
 		</Body>
 		</div>)
     }

@@ -14,6 +14,10 @@ global.XMLHttpRequest = dom.window.XMLHttpRequest;
 //const root = require('rxjs/util/root');
 window.Object = global.Object
 window.Math = global.Math
+global.screen = {
+    width:1920,
+    height:1080
+}
 //console.log(`************* global ${global.Object} *************`)
 //console.log(`************** window ${window.Object} *************`);
 //global.window.location.href = "http://localhost:8080"
