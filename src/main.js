@@ -516,7 +516,10 @@ class Main extends React.Component {
     render() {
 	return (<div className="mdl-layout mdl-js-layout mdl-layout__header--scroll">
 		<Nav title="Deck Builder" links={this.links} tabs={this.tabs}>
-		<FacebookLogin onlogin={this.onlogin.bind(this)}/>
+		{(_ => {
+		    if(screen.width > 768)
+			return <FacebookLogin onlogin={this.onlogin.bind(this)}/>
+		})()}
 		</Nav>
 		<div className="mdl-layout--large-screen-only">
 		<Drawer title="Deck Builder" links={this.links}/>
