@@ -4,7 +4,7 @@ const browserify = require('browserify');
 const source = require('vinyl-source-stream');
 const connect = require('gulp-connect');
 const mocha = require('gulp-mocha');
-
+const uglify = require('gulp-uglify')
 
 gulp.task('test', function() {
     return gulp.src('./test/**/*.js').pipe(mocha({require:'test/setup.js', compilers: ['js:babel-register']}));
@@ -19,6 +19,7 @@ gulp.task('js', ['test'], function() {
 	    return this.emit('end');
 	})
 	.pipe(source('bundle.js'))
+
 	.pipe(gulp.dest('build'));
 })
 
@@ -41,5 +42,3 @@ gulp.task('default',['js', 'cp'], function() {
     })
 
 })
-
-
