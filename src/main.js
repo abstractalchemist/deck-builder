@@ -113,6 +113,11 @@ class Main extends React.Component {
 	]
 	if(this.state.loggedIn)
 	    show_opts = show_opts.concat([
+		    <Checkbox value={this.state.show_title} clickhandler={
+			evt => {
+			    this.setState({show_title:evt.currentTarget.checked})
+			}
+		    } label="Show Title" id="show-title-option"/>,
 		    <Checkbox clickhandler={
 			evt => {
 			    this.setState({filter_to_deck:evt.currentTarget.checked})
@@ -238,7 +243,7 @@ class Main extends React.Component {
 			},
 			_ => {
 
-			    buffer2.sort( ( {id:id1},{id:id2} ) => id1.localeCompare(id2))
+//			    buffer2.sort( ( {id:id1},{id:id2} ) => id1.localeCompare(id2))
 			    this.setState({is_building:undefined,cardset_coll:buffer2});
 			})
  	    })
