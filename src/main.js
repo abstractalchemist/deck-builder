@@ -8,6 +8,7 @@ import { buildCardSet, CardSetView, CardSetNameView } from 'weiss-utils'
 import { Checkbox, NameDialog, DeckSettingsDialog, DeckLevelView } from './card_utils';
 import { generateCard, generateDeckView } from './utils'
 import FacebookLogin from './login'
+import work from 'webworkify';
 
 /*
  * state attributes
@@ -40,7 +41,10 @@ class Main extends React.Component {
 	window.__main_fbinit__ = _ => {
 	    this.onlogin()
 	}
-	
+	if(typeof Worker !== 'undefined') {
+	    console.log(typeof Worker)
+	    this.worker = work(require('./worker.js'))
+	}
     }
 
     updateOwnership(evt) {
@@ -243,8 +247,15 @@ class Main extends React.Component {
 			},
 			_ => {
 
-//			    buffer2.sort( ( {id:id1},{id:id2} ) => id1.localeCompare(id2))
-			    this.setState({is_building:undefined,cardset_coll:buffer2});
+			    //			    buffer2.sort( ( {id:id1},{id:id2} ) => id1.localeCompare(id2))
+			    if(this.worker) {
+				this.worker.postMessage(buffer2)
+				this.worker.addEventListener('message', ({data}) => {
+				    this.setState({is_building:undefined,cardset_coll:data});
+				})
+			    }
+			    else
+				this.setState({is_building:undefined,cardset_coll:buffer2});
 			})
  	    })
 	
