@@ -73,7 +73,7 @@ export default (function() {
 		
     }
 
-    let library_cache = []
+    let library_cache = undefined;
     
     return {
 
