@@ -131,8 +131,8 @@ export default (function() {
 			})
 		}
 
-		
-		return Rx.Observable.of(library_cache.find( ({ _id }) => key === _id))
+		else
+		    return Rx.Observable.of(library_cache.find( ({ _id }) => key === _id))
 		// return Rx.Observable.from(Http({method:"GET",url:"/api/library/" + card_id.toLowerCase().replace(/\/|-/g,"_"), headers}))
 		//     .map(JSON.parse)
 		//     .catch(_ => Rx.Observable.from(Http({method:"GET", url:"/api-dyn/price/" + card_id}))
