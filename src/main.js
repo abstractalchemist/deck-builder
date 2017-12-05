@@ -49,6 +49,7 @@ class Main extends React.Component {
 
     updateOwnership(evt) {
 	console.log(`updating ownership of ${evt.currentTarget.dataset.id}`);
+	this.setState({can_add_to_library:false})
 	let target = evt.currentTarget.dataset.id;
 	let number = evt.currentTarget.dataset.number;
 	Cards.addtocollection(target)
@@ -61,7 +62,7 @@ class Main extends React.Component {
 			    return o
 			return j;
 		    });
-		    this.setState({cardset_coll:ptr});
+		    this.setState({cardset_coll:ptr, can_add_to_library:true});
 		    
 		},
 		err => {
@@ -145,7 +146,9 @@ class Main extends React.Component {
 	    updateCardView:this.updateCardView.bind(this),
 	    filterCardSet:this.filterCardSet.bind(this),
 	    addhandler:(this.state.loggedIn && this.state.deck_id) ? { handler: this.addCardToDeck.bind(this), tooltip: "Add Card To Current Deck" }: undefined,
-	    addhandler2:this.state.loggedIn ? { handler: this.updateOwnership.bind(this), tooltip: "Add Card To Library" }: undefined,
+	    addhandler2:this.state.loggedIn ? { handler: evt => {
+		this.updateOwnership(evt)
+	    }, tooltip: "Add Card To Library", disabled:!this.state.can_add_to_library }: undefined,
 	    
 	    removehandler2:this.state.loggedIn ? { handler : this.removeOwnership.bind(this), tooltip:"Remove From Library" } : undefined,
 	    menuOpts:[{id:'tcgrepublic',label:'Search TCG Republic'},{id:'tcgplayer',label:'Search TCG Player'},{id:'amazon',label:"Search Amazon"},{id:'ideal808',label:"Search Ideal 808"}],
@@ -251,11 +254,11 @@ class Main extends React.Component {
 			    if(this.worker) {
 				this.worker.postMessage(buffer2)
 				this.worker.addEventListener('message', ({data}) => {
-				    this.setState({is_building:undefined,cardset_coll:data});
+				    this.setState({is_building:undefined,cardset_coll:data,can_add_to_library:true});
 				})
 			    }
 			    else
-				this.setState({is_building:undefined,cardset_coll:buffer2});
+				this.setState({is_building:undefined,cardset_coll:buffer2,can_add_to_library:true});
 			})
  	    })
 	
@@ -279,18 +282,24 @@ class Main extends React.Component {
 		    });
 		let c = deck.filter( ({id}) => id === target);
 		if(c.length == 0) {
-		    observable.subscribe(
-			({card,relation}) => {
-			    deck.push(Object.assign({}, card, { count: 1 }));
-			    if(relation)
-				alert("added card is related to " + relation.name);
-			    this.setState({deck});
-			    //document.querySelector("#deck_builder_tab").classList.add("is-active");
-			    //document.querySelector("#deck_builder").classList.add("is-active");
-			    //document.querySelector("#card_viewer_tab").classList.remove("is-active");
-			    //document.querySelector("#card_viewer").classList.remove("is-active");
+		    observable
+			.do( ({ card,relation}) => deck.push(Object.assign({}, card, { count: 1 })))
+			.mergeMap(card => {
+			    return Deck.updatedeck(this.state.deck_id, deck)
+				.map( _ => card)
+
+			})
+			.subscribe(
+			    ({card,relation}) => {
+				if(relation)
+				    alert("added card is related to " + relation.name);
+				
+				this.setState({deck});
 			    
-			});
+			    },
+			    err => {
+				alert(err)
+			    });
 		    
 		}
 		else

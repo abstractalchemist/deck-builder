@@ -62,7 +62,8 @@ export default (function() {
 	
 	updatedeck(id,deck) {
 	    let headers = getsecurityheaders()
-	    
+
+	    // removes unnecessary properties
 	    let reduced = deck.map(({id,count}) => {
 		return {id,count}
 	    })
