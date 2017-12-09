@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "build": "browserify --transform babelify ./src/index.js   -g [ envify --NODE_ENV production ]   -g uglifyify   | uglifyjs --compress --mangle > ./build/bundle.js"
   },
   "author": "",
   "license": "ISC",
@@ -25,15 +26,19 @@
     "bowserify": "^10.2.1",
     "browserify": "^14.4.0",
     "chai": "^4.1.2",
+    "envify": "^4.1.0",
     "enzyme": "^3.1.0",
     "enzyme-adapter-react-16": "^1.0.1",
     "gulp": "^3.9.1",
     "gulp-connect": "^5.0.0",
+    "gulp-envify": "^1.0.0",
     "gulp-mocha": "^4.3.1",
     "gulp-uglify": "^3.0.0",
     "jsdom": "^11.3.0",
     "react-test-renderer": "^16.0.0",
     "uglify": "^0.1.5",
+    "uglify-js": "^3.2.1",
+    "uglifyify": "^4.0.5",
     "vinyl-source-stream": "^1.1.0"
   }
 }
