@@ -112,14 +112,10 @@ export default (function() {
 		.map(JSON.parse)
 		.mergeMap(({count,_rev}) => Http({method:"PUT",url:"/api/library/" + card_id, headers}, JSON.stringify({count:count+1,_rev})))
 		.catch(_ => Rx.Observable.from(Http({method:"PUT",url:"/api/library/" + card_id, headers}, JSON.stringify({count:1}))))
-		.do(_ => { library_cache = undefined });
+		.mergeMap(this.update_library.bind(this))
 	},
-	
-	getownership(card_id) {
-	    if(!card_id)
-		throw "Card Id not provided"
+	update_library() {
 	    let headers = getsecurityheaders()
-	    let key =  card_id.toLowerCase().replace(/\/|-/g,"_")
 	    if(headers['TOKEN']) {
 		if(library_cache === undefined) {
 		    return Rx.Observable.from(Http({method:"GET",url:"/api/library/_design/view/_list/all/all",headers}))
@@ -133,14 +129,19 @@ export default (function() {
 
 		else
 		    return Rx.Observable.of(library_cache.find( ({ _id }) => key === _id))
-		// return Rx.Observable.from(Http({method:"GET",url:"/api/library/" + card_id.toLowerCase().replace(/\/|-/g,"_"), headers}))
-		//     .map(JSON.parse)
-		//     .catch(_ => Rx.Observable.from(Http({method:"GET", url:"/api-dyn/price/" + card_id}))
-		// 	   .timeout(500)
-		// 	   .catch(err => Rx.Observable.of("No Price found"))
-	    	// 	   .map(price => {
-	    	// 	   return { count: 0, price }
-	    	// 	   }));
+	
+	    }
+	    else
+		return Rx.Observable.of("")
+
+	},
+	getownership(card_id) {
+	    if(!card_id)
+		throw "Card Id not provided"
+	    let headers = getsecurityheaders()
+	    let key =  card_id.toLowerCase().replace(/\/|-/g,"_")
+	    if(headers['TOKEN'] && library_cache) {
+		return Rx.Observable.of(library_cache.find( ({ _id }) => key === _id))
 	    }
 	    return Rx.Observable.of("No Price found")
 	

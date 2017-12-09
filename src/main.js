@@ -367,7 +367,10 @@ class Main extends React.Component {
 			data => {
 			    this.setState({decks:data});
 			})
-
+		    Cards.update_library()
+			.subscribe(
+			    _ => {},
+			    err => {})
 		}
 		else {
 		    this.setState({loggedIn:false,decks:undefined, filter_to_deck:false, filter_owned:false, filter_unowned:false})
