@@ -9,7 +9,6 @@ import { Checkbox, NameDialog, DeckSettingsDialog, DeckLevelView } from './card_
 import { generateCard, generateDeckView } from './utils'
 import FacebookLogin from './login'
 import work from 'webworkify';
-
 /*
  * state attributes
  * - deck - list of cards to display in deck view
@@ -30,7 +29,7 @@ class Main extends React.Component {
 	super(props);
 
 	this.links = [];
-	this.state = { deck : [], cardset: "", cardsets: [], flush_display : true }
+	this.state = { deck : [], cardset: "", cardsets: [], flush_display : true, viewable:4 }
 	let mythis = this;
 	this.tabs = [{ id: "deck_builder",
 		       label: "Deck Builder",
@@ -45,6 +44,36 @@ class Main extends React.Component {
 	    console.log(typeof Worker)
 	    this.worker = work(require('./worker.js'))
 	}
+	const viewable_cards = _ => {
+	    let cardsize = document.querySelector('.card-set-cell')
+	    if(cardsize == undefined)
+		return 4; // we return 4 if there are no cards in view
+ 	    let card_bounding = cardsize.getBoundingClientRect()
+
+	    let view = document.querySelector('.card-set-view')
+	    
+	    let bounding = view.getBoundingClientRect()
+	    let bottom = window.innerHeight - bounding.top; // where are we exactly
+	    let x = Math.floor(bottom / card_bounding.width); // number of cards we can display in the given width
+
+	    let y = Math.floor(bottom / card_bounding.height)
+	    console.log(`can view ${x} across, ${y} high`)
+	    return x * y;
+	}
+	
+	Rx.Observable.fromEvent(window, 'scroll', true)
+	    .debounceTime(100)
+	    .subscribe(
+		_ => {
+		    console.log(`rx scroll; is at bottom ${viewable_cards()}`)
+		    let viewable = viewable_cards()
+		    if(viewable != this.state.viewable)
+			this.setState( prev => {
+			    return { viewable:viewable_cards()}
+			})
+		
+		},
+		err => alert)
     }
 
     updateOwnership(evt) {
@@ -228,7 +257,7 @@ class Main extends React.Component {
 	    },
 	    _ => {
 		//		console.log('update card view');
-		this.setState({cardset:targets,cardset_coll:buffer,is_building:true});
+		this.setState({cardset:targets,cardset_coll:buffer,is_building:true, viewable:4});
 		let buffer2 = [];
 		this.ownershipRetrieveHandle = Rx.Observable.from(buffer)
 		    .mergeMap(data => {
