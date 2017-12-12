@@ -46,17 +46,20 @@ class Main extends React.Component {
 	}
 	const viewable_cards = _ => {
 	    let cardsize = document.querySelector('.card-set-cell')
-	    if(cardsize == undefined)
+	    if(cardsize == undefined) {
+		if(screen.width > 768) 
+		    return 6
 		return 4; // we return 4 if there are no cards in view
+	    }
  	    let card_bounding = cardsize.getBoundingClientRect()
 
 	    let view = document.querySelector('.card-set-view')
 	    
 	    let bounding = view.getBoundingClientRect()
 	    let bottom = window.innerHeight - bounding.top; // where are we exactly
-	    let x = Math.floor(bottom / card_bounding.width); // number of cards we can display in the given width
+	    let x = Math.floor(bounding.width / card_bounding.width); // number of cards we can display in the given width
 
-	    let y = Math.floor(bottom / card_bounding.height)
+	    let y = Math.floor(bottom / card_bounding.height) + 1
 	    console.log(`can view ${x} across, ${y} high`)
 	    return x * y;
 	}
