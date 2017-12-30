@@ -86,7 +86,11 @@ class Main extends React.Component {
 	let number = evt.currentTarget.dataset.number;
 	Cards.addtocollection(target)
 	    .mergeMap(_ => Cards.getcard(target))
-	    .mergeMap(data =>  Cards.getownership(number).map(o => Object.assign({}, {ownership:o}, data)))
+	    .mergeMap(data =>  Cards.getownership(number).map(o => {
+		if(process.env.NODE_ENV !== 'production')
+		    console.log(o)
+		return Object.assign({}, {ownership:o}, data)
+	    }))
 	    .subscribe(
 		o => {
 		    let ptr = this.state.cardset_coll.map(j => {
@@ -203,7 +207,8 @@ class Main extends React.Component {
 
 
     removeOwnership(evt) {
-	console.log(`removing ownership of ${evt.currentTarget.dataset.id}`);
+	if(process.env.NODE_ENV !== 'production')
+	    console.log(`removing ownership of ${evt.currentTarget.dataset.id}`);
 	let target = evt.currentTarget.dataset.id;
 	let number = evt.currentTarget.dataset.number;
 	Cards.removefromcollection(target)
@@ -256,7 +261,8 @@ class Main extends React.Component {
 		buffer.push(data)
 	    },
 	    err => {
-		console.log(`error ${err}`);
+		if(process.env.NODE_ENV !== 'production')
+		    console.log(`error ${err}`);
 	    },
 	    _ => {
 		//		console.log('update card view');
@@ -278,7 +284,8 @@ class Main extends React.Component {
 			    // }
 			},
 			err => {
-			    console.log(`error ${err}`);
+			    if(process.env.NODE_ENV !== 'production')
+				console.log(`error ${err}`);
 			},
 			_ => {
 
@@ -298,7 +305,8 @@ class Main extends React.Component {
 
     addCardToDeck(evt) {
 	let target = evt.currentTarget.dataset.id;
-	console.log("adding " + target + " to deck");
+	if(process.env.NODE_ENV !== 'production')
+	    console.log("adding " + target + " to deck");
 	if(target) {
 	    let deck = this.state.deck;
 	    if(deck) {
@@ -357,7 +365,8 @@ class Main extends React.Component {
     removeCardFromDeck(evt) {
 	let target = evt.target.dataset.id;
 	if(target) {
-	    console.log("removing " + target + " from deck");
+	    if(process.env.NODE_ENV !== 'production')
+		console.log("removing " + target + " from deck");
 	    let cardIndex = this.state.deck.findIndex( ({id}) => id === target );
 	    if(cardIndex >= 0) {
 
@@ -538,7 +547,8 @@ class Main extends React.Component {
 	    observer.subscribe(
 		deck => {
 		    if(deck && deck.deck) {
-			console.log("setting target to " + target);
+			if(process.env.NODE_ENV !== 'production')
+			    console.log("setting target to " + target);
 			Rx.Observable.from(deck.deck)
 			    .mergeMap( ({id,count}) => {
 				return Cards.getcard(id).map(data => Object.assign({}, data, {count}))

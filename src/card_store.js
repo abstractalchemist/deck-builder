@@ -25,7 +25,8 @@ export default (function() {
     const mapper = card_id => {
 	return Rx.Observable.from(Http({method:"GET",url:"/api/cardmapping/mapping"}))
 	    .catch(err => {
-		console.log(err)
+		if(process.env.NODE_ENV !== 'production')
+		    console.log(err)
 		if(window.localStorage)
 		    return Rx.Observable.of(window.localStorage.getItem('mapping'))
 		throw err;
@@ -91,6 +92,7 @@ export default (function() {
 			    
 			return Http({method:"PUT",url:"/api/library/"+card_id, headers}, JSON.stringify({count:count-1,_rev}))
 		})
+		.mergeMap(this.update_library.bind(this))
 			
 	},
 	
@@ -117,18 +119,21 @@ export default (function() {
 	update_library() {
 	    let headers = getsecurityheaders()
 	    if(headers['TOKEN']) {
-		if(library_cache === undefined) {
-		    return Rx.Observable.from(Http({method:"GET",url:"/api/library/_design/view/_list/all/all",headers}))
-			.map(JSON.parse)
-			.mergeMap( data => {
-			    library_cache = data;
+//		if(library_cache === undefined) {
+		return Rx.Observable.from(Http({method:"GET",url:"/api/library/_design/view/_list/all/all",headers}))
+		    .map(JSON.parse)
+		    .do(data => {
+			library_cache = data;
+		    })
+			// .mergeMap( data => {
+			//     library_cache = data;
 
-			    return Rx.Observable.of(library_cache.find( ({ _id }) => key === _id))
-			})
-		}
+			//     return Rx.Observable.of(library_cache.find( ({ _id }) => key === _id))
+			// })
+		// }
 
-		else
-		    return Rx.Observable.of(library_cache.find( ({ _id }) => key === _id))
+		// else
+		//     return Rx.Observable.of(library_cache)
 	
 	    }
 	    else
