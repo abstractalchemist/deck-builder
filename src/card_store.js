@@ -2,6 +2,8 @@ import Http from 'utils';
 import { Observable } from 'rxjs';
 const { create, from, of } = Observable
 import  db_interface  from './db'
+
+import { basic_handler, login_status } from './store_utils'
 export default (function() {
    let testing = [
       {
@@ -129,24 +131,61 @@ export default (function() {
    }
    
    let library_cache = undefined;
-   
+
+   const get_library = _ => {
+      return login_status()
+         .mergeMap(user_id => 
+            create(observer => {
+               db_interface.getItem({
+                  TableName:'library',
+                  Key: {
+                     user_id: {
+                        S:user_id
+                     }
+                  }
+               }, basic_handler(observer))
+            })
+         )
+   }
+  
+   const update_library = data => {
+      return login_status()
+         .mergeMap(user_id => 
+            create(observer => 
+               db_interface.updateItem({
+                  TableName:'library',
+                  Key: {
+                     user_id:{
+                        S:user_id
+                     }
+                  },
+                  ExpressionAttributeNames: {
+                     "#library":"library"
+                  },
+                  ExpressionAttributeValues: {
+                     "#l": {
+                        L: data
+                     }
+                  },
+                  UpdateExpression:"SET #library = :l",
+                  ReturnValues:"ALL_NEW"
+               }, basic_handler(observer))
+            ))
+   }
+
    return {
    
       removefromcollection(card_id) {
-         let headers = getsecurityheaders()
-         return from(Http({method:"GET",url:"/api/library/" + card_id, headers}))
-            .catch(_ => {
-               return of();
+         return get_library()
+            .mergeMap(data => {
+               let doc = data.find( ({card_id:{S}}) => S === card_id)
+               if(doc) {
+                  doc.count.N = (parseInt(doc.count.N) - 1).toString()
+                  if(parseInt(doc.count.N) == 0)
+                     data = data.filter( ({ card_id:{S}}) => S !== card_id )
+               }
+               return update_library(data)
             })
-            .map(JSON.parse)
-            .mergeMap(({count,_rev}) => {
-               if(count === 1)
-                  return Http({method:"DELETE",url:"/api/library/"+card_id+"?rev=" + _rev,headers})
-               
-               
-               return Http({method:"PUT",url:"/api/library/"+card_id, headers}, JSON.stringify({count:count-1,_rev}))
-            })
-            .mergeMap(this.update_library.bind(this))
       
       },
       
@@ -164,31 +203,28 @@ export default (function() {
       },
       addtocollection(card_id) {
          let headers = getsecurityheaders()
-         return from(Http({method:"GET",url:"/api/library/" + card_id, headers}))
-            .map(JSON.parse)
-            .mergeMap(({count,_rev}) => Http({method:"PUT",url:"/api/library/" + card_id, headers}, JSON.stringify({count:count+1,_rev})))
-            .catch(_ => from(Http({method:"PUT",url:"/api/library/" + card_id, headers}, JSON.stringify({count:1}))))
-            .mergeMap(this.update_library.bind(this))
+         return get_library()
+            .mergeMap(data => {
+               let doc = data.find( ({card_id:{S}}) => S === card_id)
+               if(doc)
+                  doc.count.N = (parseInt(doc.count.N) + 1).toString()
+               else {
+                  data.push({
+                     card_id: {
+                        S:card_id
+                     },
+                     count: {
+                        N:"1"
+                     }
+                  })
+               }
+               return update_library(data)
+            })
       },
       update_library() {
          let headers = getsecurityheaders()
          if(headers['TOKEN']) {
-         //		if(library_cache === undefined) {
-            return from(Http({method:"GET",url:"/api/library/_design/view/_list/all/all",headers}))
-               .map(JSON.parse)
-               .do(data => {
-                  library_cache = data;
-               })
-            // .mergeMap( data => {
-            //     library_cache = data;
-            
-            //     return Rx.Observable.of(library_cache.find( ({ _id }) => key === _id))
-            // })
-            // }
-            
-            // else
-            //     return Rx.Observable.of(library_cache)
-         
+            return get_library()         
          }
          else
             return of("")

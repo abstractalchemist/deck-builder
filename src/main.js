@@ -370,66 +370,64 @@ class Main extends React.Component {
    removeCardFromDeck(evt) {
       let target = evt.target.dataset.id;
       if(target) {
-      if(process.env.NODE_ENV !== 'production')
-      console.log("removing " + target + " from deck");
-      let cardIndex = this.state.deck.findIndex( ({id}) => id === target );
-      if(cardIndex >= 0) {
-      
-      let deck = this.state.deck;
-      let card = deck[cardIndex];
-      if(card.count > 1)
-      card.count = card.count - 1;
-      else 
-      deck.splice(cardIndex,1);
-      this.setState({deck:deck});
-      }
+         if(process.env.NODE_ENV !== 'production')
+            console.log("removing " + target + " from deck");
+         let cardIndex = this.state.deck.findIndex( ({id}) => id === target );
+         if(cardIndex >= 0) {
+         
+            let deck = this.state.deck;
+            let card = deck[cardIndex];
+            if(card.count > 1)
+               card.count = card.count - 1;
+            else 
+               deck.splice(cardIndex,1);
+            this.setState({deck:deck});
+         }
       }
       else
-      alert("target undefined");
+         alert("target undefined");
    }
    
    deleteDeck(evt) {
       let target = evt.currentTarget.dataset.id;
       if(target) {
-      Deck.deleteDeck(target).mergeMap(
-      _ => {
-      return Deck.getdecks();
-      })
-      .subscribe(decks => {
-      this.setState({ decks })
-      });
+         Deck.deleteDeck(target).mergeMap(
+            _ => Deck.getdecks())
+            .subscribe(decks => {
+               this.setState({ decks })
+            });
       }
    }
    
    onlogin() {
       if(typeof FB !== "undefined") {
-      FB.getLoginStatus( ({status,authResponse}) => {
-      console.log(`user status ${status}`)
-      if(status === 'connected') {
-      this.setState(({loggedIn:true}))
-      window.sessionStorage.setItem('fb-token', authResponse.accessToken)
-      
-      Deck.getdecks().subscribe(
-      data => {
-      this.setState({decks:data});
-      })
-      Cards.update_library()
-      .subscribe(
-      _ => {},
-      err => {})
+         FB.getLoginStatus( ({status,authResponse}) => {
+            console.log(`user status ${status}`)
+            if(status === 'connected') {
+               this.setState(({loggedIn:true}))
+               window.sessionStorage.setItem('fb-token', authResponse.accessToken)
+               
+               Deck.getdecks().subscribe(
+                  data => {
+                     this.setState({decks:data});
+                  })
+                  Cards.update_library()
+                     .subscribe(
+                        _ => {},
+                        err => {})
+            }
+            else {
+               this.setState({loggedIn:false,decks:undefined, filter_to_deck:false, filter_owned:false, filter_unowned:false})
+            
+               window.sessionStorage.removeItem('fb-token')
+            
+            }
+         })
       }
       else {
-      this.setState({loggedIn:false,decks:undefined, filter_to_deck:false, filter_owned:false, filter_unowned:false})
-      
-      window.sessionStorage.removeItem('fb-token')
-      
-      }
-      })
-      }
-      else {
-      this.setState({loggedIn:false,decks:undefined, filter_to_deck:false, filter_owned:false, filter_unowned:false})
-      
-      window.sessionStorage.removeItem('fb-token')
+         this.setState({loggedIn:false,decks:undefined, filter_to_deck:false, filter_owned:false, filter_unowned:false})
+         
+         window.sessionStorage.removeItem('fb-token')
       
       }
    
