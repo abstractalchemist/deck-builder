@@ -9,6 +9,9 @@ import { Checkbox, NameDialog, DeckSettingsDialog, DeckLevelView } from './card_
 import { generateCard, generateDeckView } from './utils'
 import FacebookLogin from './login'
 import work from 'webworkify';
+
+import AWS from 'aws-sdk'
+
 /*
  * state attributes
  * - deck - list of cards to display in deck view
@@ -244,67 +247,67 @@ class Main extends React.Component {
       let selected = document.querySelectorAll('.cardset-selector label.is-checked')
       let targets = [];
       if(selected) {
-      for(let i = 0; i < selected.length; ++i) {
-      let item = selected.item(i);
-      if(item.dataset.id)
-      targets.push(item.dataset.id);
-      }
+         for(let i = 0; i < selected.length; ++i) {
+         let item = selected.item(i);
+         if(item.dataset.id)
+         targets.push(item.dataset.id);
+         }
       }
       //	let target = targets[0];
       let observable = Rx.Observable.merge.apply(undefined, targets.map(Cards.getcardsfromset));
       //	let observable = Cards.getcardsfromset(target);
       let buffer = [];
       if(this.cardViewRetrieveHandle) {
-      this.cardViewRetrieveHandle.unsubscribe();
+         this.cardViewRetrieveHandle.unsubscribe();
       }
       if(this.ownershipRetrieveHandle) {
-      this.ownershipRetrieveHandle.unsubscribe();
+         this.ownershipRetrieveHandle.unsubscribe();
       }
       
       this.cardViewRetrieveHandle = observable.subscribe(
-      data => {
-      buffer.push(data)
-      },
-      err => {
-      if(process.env.NODE_ENV !== 'production')
-      console.log(`error ${err}`);
-      },
-      _ => {
-      //		console.log('update card view');
-      this.setState({cardset:targets,cardset_coll:buffer,is_building:true, viewable:4});
-      let buffer2 = [];
-      this.ownershipRetrieveHandle = Rx.Observable.from(buffer)
-      .mergeMap(data => {
-      return Cards.getownership(data.number)
-      .map(ownership => Object.assign({}, data, {ownership}))
-      })
-      .subscribe(
-      data => {
-      buffer2.push(data);
-      // let index = this.state.cardset_coll.findIndex( ({ id }) => data.id === id);
-      // let ptr = this.state.cardset_coll.map(o => o);
-      // if(index >= 0) {
-      // 	ptr[index] = data;
-      // 	this.setState({cardset_coll:ptr});
-      // }
-      },
-      err => {
-      if(process.env.NODE_ENV !== 'production')
-      console.log(`error ${err}`);
-      },
-      _ => {
-      
-      //			    buffer2.sort( ( {id:id1},{id:id2} ) => id1.localeCompare(id2))
-      if(this.worker) {
-      this.worker.postMessage(buffer2)
-      this.worker.addEventListener('message', ({data}) => {
-      this.setState({is_building:undefined,cardset_coll:data,can_add_to_library:true});
-      })
-      }
-      else
-      this.setState({is_building:undefined,cardset_coll:buffer2,can_add_to_library:true});
-      })
-      })
+         data => {
+            buffer.push(data)
+         },
+         err => {
+            if(process.env.NODE_ENV !== 'production')
+               console.log(`error ${err}`);
+         },
+         _ => {
+         //		console.log('update card view');
+            this.setState({cardset:targets,cardset_coll:buffer,is_building:true, viewable:10});
+            let buffer2 = [];
+            this.ownershipRetrieveHandle = Rx.Observable.from(buffer)
+               .mergeMap(data => Cards.getownership(data.number)
+
+                  .map(ownership => Object.assign({}, data, {ownership}))
+               )
+               .subscribe(
+                  data => {
+                     buffer2.push(data);
+                     // let index = this.state.cardset_coll.findIndex( ({ id }) => data.id === id);
+                     // let ptr = this.state.cardset_coll.map(o => o);
+                     // if(index >= 0) {
+                     // 	ptr[index] = data;
+                     // 	this.setState({cardset_coll:ptr});
+                     // }
+                  },
+                  err => {
+                     if(process.env.NODE_ENV !== 'production')
+                        console.log(`error ${err}`);
+                  },
+                  _ => {
+                  
+                  //			    buffer2.sort( ( {id:id1},{id:id2} ) => id1.localeCompare(id2))
+                     if(this.worker) {
+                        this.worker.postMessage(buffer2)
+                        this.worker.addEventListener('message', ({data}) => {
+                           this.setState({is_building:undefined,cardset_coll:data,can_add_to_library:true});
+                        })
+                     }
+                     else
+                        this.setState({is_building:undefined,cardset_coll:buffer2,can_add_to_library:true});
+                  })
+         })
    
    }
    
@@ -406,15 +409,26 @@ class Main extends React.Component {
             if(status === 'connected') {
                this.setState(({loggedIn:true}))
                window.sessionStorage.setItem('fb-token', authResponse.accessToken)
-               
-               Deck.getdecks().subscribe(
-                  data => {
-                     this.setState({decks:data});
-                  })
-                  Cards.update_library()
-                     .subscribe(
-                        _ => {},
-                        err => {})
+               AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+                  IdentityPoolId:"us-west-2:3a222ba4-1c88-485d-aea8-ade0015fa33b",
+                  Logins: {
+                     'graph.facebook.com':authResponse.accessToken
+                  }
+               })
+               AWS.config.credentials.get(err => {
+                  if(err)
+                     throw new Error(`error getting credentials ${err}`)
+                  Deck.getdecks().subscribe(
+                     data => {
+                        this.setState({decks:data});
+                     })
+                     Cards.update_library()
+                        .subscribe(
+                           _ => {},
+                           err => {})
+
+               })
+                
             }
             else {
                this.setState({loggedIn:false,decks:undefined, filter_to_deck:false, filter_owned:false, filter_unowned:false})
