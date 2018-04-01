@@ -1,7 +1,7 @@
 import Http from 'utils';
 import { Observable } from 'rxjs';
 const { create, from, of } = Observable
-import  db_interface  from './db'
+import  get_interface  from './db'
 
 import { basic_handler, login_status } from './store_utils'
 export default (function() {
@@ -50,7 +50,7 @@ export default (function() {
    // this is a reverse mapper
    const mapper = card_id => {
       return create(observer => {
-         db_interface.scan({
+         get_interface().scan({
             TableName:'card_sets'
          },
          (error, data) => {
@@ -62,18 +62,43 @@ export default (function() {
          })
       })
          .pluck('Items')
-         .mergeMap(mapping => {
-            let matching_dbs = mapping.filter( ({ set_prefix: {S:prefix} }) => card_id.startsWith(prefix));
+         .map(mapping => {
+            let matching_dbs = mapping.filter( ({ prefix }) => {
+               if(prefix.S) {
+                  prefix = prefix.S
+                  return card_id.startsWith(prefix.toLowerCase().replace('/','_').replace('-','_'))
+               }
+               else if(prefix.SS) {
+                  return prefix.SS.some(prefix => card_id.startsWith(prefix.toLowerCase().replace('/','_').replace('-','_')))      
+               }
+            })
+               .map(({id,prefix}) => {
+                  if(prefix.S)
+                     return {id,prefix:prefix.S}
+                  else if(prefix.SS) 
+                     return {id,prefix:prefix.SS}
+               })
+
+            
             let max = -1
             let max_index = -1;
             
-            matching_dbs.forEach(({prefix},j) => {
-               if(prefix.length > max) {
-                  max = prefix.length;
-                  max_index = j;
-               }
-            })
-            return matching_dbs[max_index]
+            matching_dbs
+               .forEach(({prefix},j) => {
+                  if(Array.isArray(prefix)) {
+                     prefix.forEach(p => {
+                        if(p.length > max) {
+                           max = p.length
+                           max_index = j
+                        }
+                     })
+                  }
+                  if(prefix.length > max) {
+                     max = prefix.length;
+                     max_index = j;
+                  }
+               })
+            return matching_dbs[max_index].id.S
 
          })
    
@@ -108,7 +133,7 @@ export default (function() {
       return mapper(card_id)
          .mergeMap(db => {
             return create(observer => {
-               db_interface.getItem({
+               get_interface().getItem({
                   TableName:db,
                   Key: {
                      id:{
@@ -125,8 +150,6 @@ export default (function() {
                })
             })
          })
-         .pluck('Item')
-         .mergeMap(from)
          .map(flatten)
    }
    
@@ -136,7 +159,8 @@ export default (function() {
       return login_status()
          .mergeMap(user_id => 
             create(observer => {
-               db_interface.getItem({
+               console.log(`using id ${user_id}`)
+               get_interface().getItem({
                   TableName:'library',
                   Key: {
                      user_id: {
@@ -152,7 +176,7 @@ export default (function() {
       return login_status()
          .mergeMap(user_id => 
             create(observer => 
-               db_interface.updateItem({
+               get_interface().updateItem({
                   TableName:'library',
                   Key: {
                      user_id:{
@@ -254,7 +278,7 @@ export default (function() {
       // get all cards from a card set id
       getcardsfromset(id) {
          return create(observer => {
-            db_interface.scan({
+            get_interface().scan({
                TableName:id
             },
             (error, data) => {
@@ -273,7 +297,7 @@ export default (function() {
       // get all known card sets
       getcardsets() {
          return create(observer => {
-            db_interface.scan({
+            get_interface().scan({
                TableName:'card_sets'
             },
             (error, data) => {

@@ -11,6 +11,7 @@ import FacebookLogin from './login'
 import work from 'webworkify';
 
 import AWS from 'aws-sdk'
+import { update_interface } from './db'
 
 /*
  * state attributes
@@ -119,7 +120,8 @@ class Main extends React.Component {
       Cards.getcardsets().subscribe(
          data => {
             this.setState({cardsets:data});
-         });
+         },
+         err => {});
       
       //	document.querySelectorAll("table > input
       let elem =  document.querySelector(".fb-login-button")
@@ -216,25 +218,25 @@ class Main extends React.Component {
    
    removeOwnership(evt) {
       if(process.env.NODE_ENV !== 'production')
-      console.log(`removing ownership of ${evt.currentTarget.dataset.id}`);
+         console.log(`removing ownership of ${evt.currentTarget.dataset.id}`);
       let target = evt.currentTarget.dataset.id;
       let number = evt.currentTarget.dataset.number;
       Cards.removefromcollection(target)
-      .mergeMap(_ => Cards.getcard(target))
-      .mergeMap(data =>  Cards.getownership(number).map(o => Object.assign({}, {ownership:o}, data)))
-      .subscribe(
-      o => {
-      let ptr = this.state.cardset_coll.map(j => {
-      if(j.id === o.id)
-      return o
-      return j;
-      });
-      this.setState({cardset_coll:ptr});
-      
-      },
-      err => {
-      alert(`ownership update error ${err}`);
-      })
+         .mergeMap(_ => Cards.getcard(target))
+         .mergeMap(data =>  Cards.getownership(number).map(o => Object.assign({}, {ownership:o}, data)))
+         .subscribe(
+            o => {
+               let ptr = this.state.cardset_coll.map(j => {
+                     if(j.id === o.id)
+                        return o
+                     return j;
+                  });
+               this.setState({cardset_coll:ptr});
+            
+            },
+            err => {
+               alert(`ownership update error ${err}`);
+            })
    
    
    }
@@ -314,59 +316,59 @@ class Main extends React.Component {
    addCardToDeck(evt) {
       let target = evt.currentTarget.dataset.id;
       if(process.env.NODE_ENV !== 'production')
-      console.log("adding " + target + " to deck");
+         console.log("adding " + target + " to deck");
       if(target) {
-      let deck = this.state.deck;
-      if(deck) {
-      let observable = Cards.getcard(target)
-      .mergeMap(card => {
-      if(card.relatedTo) {
-      return Cards.getcard(card.relatedTo).map(relation => {
-      return { card,relation}
-      });
+         let deck = this.state.deck;
+         if(deck) {
+            let observable = Cards.getcard(target)
+               .mergeMap(card => {
+                  if(card.relatedTo) {
+                     return Cards.getcard(card.relatedTo).map(relation => {
+                        return { card,relation}
+                     });
+                  }
+                  else
+                     return Rx.Observable.of({card:card});
+               });
+            let c = deck.filter( ({id}) => id === target);
+            if(c.length == 0) {
+               observable
+                  .do( ({ card,relation}) => deck.push(Object.assign({}, card, { count: 1 })))
+                  .mergeMap(card => {
+                     return Deck.updatedeck(this.state.deck_id, deck)
+                        .map( _ => card)
+                     
+                     })
+                  .subscribe(
+                     ({card,relation}) => {
+                     if(relation)
+                        alert("added card is related to " + relation.name);
+                     
+                     this.setState({deck});
+                  
+                  },
+                  err => {
+                     alert(err)
+                  });
+            
+            }
+            else
+               alert("Card exists in deck");
+         }
       }
       else
-      return Rx.Observable.of({card:card});
-      });
-      let c = deck.filter( ({id}) => id === target);
-      if(c.length == 0) {
-      observable
-      .do( ({ card,relation}) => deck.push(Object.assign({}, card, { count: 1 })))
-      .mergeMap(card => {
-      return Deck.updatedeck(this.state.deck_id, deck)
-      .map( _ => card)
-      
-      })
-      .subscribe(
-      ({card,relation}) => {
-      if(relation)
-      alert("added card is related to " + relation.name);
-      
-      this.setState({deck});
-      
-      },
-      err => {
-      alert(err)
-      });
-      
-      }
-      else
-      alert("Card exists in deck");
-      }
-      }
-      else
-      alert("target undefined");
+         alert("target undefined");
    }
    
    updateCardCount(evt) {
       let target = evt.currentTarget.dataset.id;
       if(target) {
-      let deck = this.state.deck;
-      let index = deck.findIndex( ({id}) => id === target);
-      if(index >= 0) {
-      deck[index].count = deck[index].count + 1;
-      this.setState({deck});
-      }
+         let deck = this.state.deck;
+         let index = deck.findIndex( ({id}) => id === target);
+         if(index >= 0) {
+            deck[index].count = deck[index].count + 1;
+            this.setState({deck});
+         }
       }
    }
    
@@ -415,17 +417,24 @@ class Main extends React.Component {
                      'graph.facebook.com':authResponse.accessToken
                   }
                })
+               AWS.config.region = 'us-west-2'
                AWS.config.credentials.get(err => {
                   if(err)
                      throw new Error(`error getting credentials ${err}`)
+                  update_interface()
+                  Cards.getcardsets()
+                     .subscribe(data => {
+                        this.setState({cardsets:data});
+                     })
                   Deck.getdecks().subscribe(
                      data => {
                         this.setState({decks:data});
-                     })
-                     Cards.update_library()
-                        .subscribe(
-                           _ => {},
-                           err => {})
+                     },
+                     err => {})
+                  Cards.update_library()
+                     .subscribe(
+                        _ => {},
+                         err => {})
 
                })
                 
@@ -450,108 +459,106 @@ class Main extends React.Component {
    
    buildDeck() {
       if(!this.state.loggedIn) {
-      return (<div className="mdl-grid login-grid">
-      <div className="mdl-cell mdl-cell---12-col">
-      <div className="mdl-card mdl-shadow--2dp login-display">
-      
-      <div className="mdl-card__title mdl-card--expand">
-      <div className="mdl-grid" style={{width:"100%",height:"100%"}}>
-      <div className="mdl-cell mdl-cell--4-col mdl-cell--1-col-phone mdl-cell--2-col-tablet" style={{display:"flex", alignItems:"center"}}>
-      <h2>Weiss Deck Builder</h2>
-      </div>
-      
-      <div style={{background: "url('welcome.png') center/cover"}} className="mdl-cell mdl-cell--8-col mdl-cell--3-col-phone mdl-cell--6-col-tablet"/>
-      </div>
-      </div>
-      
-      <div className="mdl-card__supporting-text">
-      This Application uses the Facebook account to identify you and store your saved decks and library so you can access it the next time you login into this application
-      </div>
-      
-      </div>
-      
-      </div>
-      </div>)
+         return (<div className="mdl-grid login-grid">
+            <div className="mdl-cell mdl-cell---12-col">
+            <div className="mdl-card mdl-shadow--2dp login-display">
+            
+            <div className="mdl-card__title mdl-card--expand">
+            <div className="mdl-grid" style={{width:"100%",height:"100%"}}>
+            <div className="mdl-cell mdl-cell--4-col mdl-cell--1-col-phone mdl-cell--2-col-tablet" style={{display:"flex", alignItems:"center"}}>
+            <h2>Weiss Deck Builder</h2>
+            </div>
+            
+            <div style={{background: "url('welcome.png') center/cover"}} className="mdl-cell mdl-cell--8-col mdl-cell--3-col-phone mdl-cell--6-col-tablet"/>
+            </div>
+            </div>
+            
+            <div className="mdl-card__supporting-text">
+            This Application uses the Facebook account to identify you and store your saved decks and library so you can access it the next time you login into this application
+            </div>
+            
+            </div>
+            
+            </div>
+            </div>)
       }
       else {
-      let save_opts = { disabled: "true" }
-      if(this.state.deck_id)
-      save_opts = { enabled: "true" }
-      
-      return (<div className="mdl-grid">
-      <div className="mdl-cell mdl-cell---12-col">
-      </div>
-      <div className="mdl-cell mdl-cell--12-col">
-      { /* add deck ids here */}
-      
-      <button id="deck-settings" className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
-      ( evt => {
-      let dialog = document.querySelector('#deck_settings');
-      if(!dialog.showModal)
-      dialogPolyfill.registerDialog(dialog);
-      dialog.showModal();
-      })}>
-      Manage Decks
-      </button>
-      <button id="save-settings" className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
-      evt => {
-      Deck.updatedeck(this.state.deck_id, this.state.deck).subscribe(
-      _ => {
-      alert("save successful");
-      },
-      err => {
-      alert("Error: " + err);
-      });
-      }
-      } {...save_opts}>
-      Save Current Deck
-      </button>
-      
-      
-      <DeckLevelView {...this.state} />
-      <div className="mdl-textfield mdl-js-textfield">
-      <label htmlFor="deck_label" className="mdl-textfield__label">{this.state.deck_name}</label>
-      <input id="deck_label" className="mdl-textfield__input"></input>
-      </div>
-      <Checkbox clickhandler={
-      evt => {
-      this.setState({flush_display:!evt.currentTarget.checked});
-      }
-      }
-      label="Split On Level"/>
-      </div>
-      <DeckSettingsDialog {...this.state} deletehandler={this.deleteDeck.bind(this)} clickhandler={this.updateDeckView.bind(this)}/>
-      <NameDialog {...this.state} changehandler={
-      evt => {
-      
-      this.setState({deck_input_name: evt.target.value});
-      
-      }
-      }
-      addhandler={
-      _ => {
-      Deck.adddeck(this.state.deck_input_name)
-      .mergeMap( _ => {
-      return Deck.getdecks();
-      })
-      .subscribe(
-      decks => {
-      let dialog = document.querySelector('#deck_name');
-      
-      dialog.close();
-      
-      this.setState({deck_input_name:"",decks});
-      });
-      }
-      } />
-      
-      {( _ => {
-      if(this.state.deck) 
-      return generateDeckView(this.state.deck, this.state.flush_display, this.updateCardCount.bind(this), this.removeCardFromDeck.bind(this));
-      })()
-      }
-      
-      </div>)
+         let save_opts = { disabled: "true" }
+         if(this.state.deck_id)
+            save_opts = { enabled: "true" }
+         
+         return (<div className="mdl-grid">
+            <div className="mdl-cell mdl-cell---12-col">
+            </div>
+            <div className="mdl-cell mdl-cell--12-col">
+            { /* add deck ids here */}
+            
+            <button id="deck-settings" className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
+               ( evt => {
+                  let dialog = document.querySelector('#deck_settings');
+                  if(!dialog.showModal)
+                  dialogPolyfill.registerDialog(dialog);
+                  dialog.showModal();
+               })}>
+            Manage Decks
+            </button>
+            <button id="save-settings" className="mdl-button mdl-js-button mdl-js-ripple-effect" onClick={
+               evt => {
+                  Deck.updatedeck(this.state.deck_id, this.state.deck).subscribe(
+                     _ => {
+                        alert("save successful");
+                     },
+                     err => {
+                        alert("Error: " + err);
+                     });
+            }
+            } {...save_opts}>
+            Save Current Deck
+            </button>
+            
+            
+            <DeckLevelView {...this.state} />
+            <div className="mdl-textfield mdl-js-textfield">
+            <label htmlFor="deck_label" className="mdl-textfield__label">{this.state.deck_name}</label>
+            <input id="deck_label" className="mdl-textfield__input"></input>
+            </div>
+            <Checkbox clickhandler={
+               evt => {
+                  this.setState({flush_display:!evt.currentTarget.checked});
+               }
+            }
+            label="Split On Level"/>
+            </div>
+            <DeckSettingsDialog {...this.state} deletehandler={this.deleteDeck.bind(this)} clickhandler={this.updateDeckView.bind(this)}/>
+            <NameDialog {...this.state} changehandler={
+               evt => {
+               
+                  this.setState({deck_input_name: evt.target.value});
+               
+               }
+            }
+            addhandler={
+               _ => {
+                  Deck.adddeck(this.state.deck_input_name)
+                     .mergeMap( _ => Deck.getdecks())
+                     .subscribe(
+                        decks => {
+                           let dialog = document.querySelector('#deck_name');
+                           
+                           dialog.close();
+                           
+                           this.setState({deck_input_name:"",decks});
+                        });
+               }
+            } />
+            
+            {( _ => {
+               if(this.state.deck) 
+                  return generateDeckView(this.state.deck, this.state.flush_display, this.updateCardCount.bind(this), this.removeCardFromDeck.bind(this));
+            })()
+            }
+            
+            </div>)
       }	    
    }	
    
