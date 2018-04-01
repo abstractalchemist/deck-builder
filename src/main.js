@@ -418,7 +418,7 @@ class Main extends React.Component {
                   }
                })
                AWS.config.region = 'us-west-2'
-               AWS.config.credentials.get(err => {
+               AWS.config.credentials.refresh(err => {
                   if(err)
                      throw new Error(`error getting credentials ${err}`)
                   update_interface()
@@ -430,7 +430,11 @@ class Main extends React.Component {
                      data => {
                         this.setState({decks:data});
                      },
-                     err => {})
+                     err => {
+                        if(process.env.NODE_ENV !== 'production')
+                           console.log(`update decks error ${err}`)
+                           console.log(err)
+                        })
                   Cards.update_library()
                      .subscribe(
                         _ => {},

@@ -11,9 +11,9 @@ const get_interface = _ => {
 }
 
 const update_interface = _ => {
-   if(process.env.NODE_ENV !== 'production')
-      db_interface = new AWS.DynamoDB({ endpoint: 'http://localhost:8000' })
-   else
+//   if(process.env.NODE_ENV !== 'production')
+//      db_interface = new AWS.DynamoDB({ endpoint: 'http://localhost:8000' })
+//   else
       db_interface = new AWS.DynamoDB()
 }
 

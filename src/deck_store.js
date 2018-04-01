@@ -61,7 +61,15 @@ export default (function() {
                   basic_handler(observer))
                }))
             .pluck('Items')
+            .do(data => {
+               if(process.env.NODE_ENV !== 'production')
+                  console.log(`decks ${data}`)
+            })
             .mergeMap(from)
+            .do(data => {
+               if(process.env.NODE_ENV !== 'production')
+                  console.log(`mapping individual decks ${data}`)
+            })
             .map(({generated_id:{S:id},label:{S:label}}) => {
                return {
                   id,
@@ -101,7 +109,11 @@ export default (function() {
             .do(console.log.bind(console))
             .map( ({generated_id:{S:id}, label:{S:label}, deck}) => {
                if(deck)
-                  return { id, label, deck:deck.L }
+                  return { id, label, deck:deck.L.map(card => {
+                     let id = card.M.id.S
+                     let count = parseInt(card.M.count.N)
+                     return { id, count }
+                  })}
                return {id, label, deck:[]}
             })
       },
@@ -112,30 +124,35 @@ export default (function() {
          // removes unnecessary properties
          let reduced = deck.map(({id,count}) => {
             return { 
-               id: {
-                  S: id
-               }, 
-               count: {
-                  N:count
+                  M: {
+                     id: {
+                        S: id
+                     }, 
+                     count: {
+                        N:count.toString()
+                     }
+                  }
                }
-            }
          })
          return login_status()
             .mergeMap(user_id => 
                create(observer => {
-                  get_interface().putItem({
+                  get_interface().updateItem({
                      TableName:'decks',
-                     Item: {
+                     Key: {
                         user_id: {
-                           S: user_id
+                           S:user_id
                         },
                         generated_id: {
-                           S: id
-                        },
-                        deck: {
-                           L:reduced
+                           S:id
                         }
-                     }
+                     },
+                     ExpressionAttributeValues: {
+                        ":deck": {
+                           "L":reduced
+                        }
+                     },
+                     UpdateExpression: "SET deck = :deck"
                   },
                   basic_handler(observer))
                })

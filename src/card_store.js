@@ -150,6 +150,7 @@ export default (function() {
                })
             })
          })
+         .pluck('Item')
          .map(flatten)
    }
    
@@ -165,6 +166,7 @@ export default (function() {
                   Key: {
                      user_id: {
                         S:user_id
+                        
                      }
                   }
                }, basic_handler(observer))
