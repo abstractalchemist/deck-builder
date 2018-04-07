@@ -66,7 +66,7 @@ class Main extends React.Component {
          let bottom = window.innerHeight - bounding.top; // where are we exactly
          let x = Math.floor(bounding.width / card_bounding.width); // number of cards we can display in the given width
          
-         let y = Math.floor(bottom / card_bounding.height) + 1
+         let y = Math.ceil(bottom / card_bounding.height) + 1
          console.log(`can view ${x} across, ${y} high`)
          return x * y;
       }
@@ -75,7 +75,7 @@ class Main extends React.Component {
          .debounceTime(100)
          .subscribe(
             _ => {
-               console.log(`rx scroll; is at bottom ${viewable_cards()}`)
+//               console.log(`rx scroll; is at bottom ${viewable_cards()}`)
                let viewable = viewable_cards()
                if(viewable != this.state.viewable)
                this.setState( prev => {
