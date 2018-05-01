@@ -13,8 +13,22 @@ const basic_handler = observer =>
 const login_status = _ => 
    create(observer => {
       if(AWS.config.credentials) {
-         observer.next(AWS.config.credentials.identityId)
-         observer.complete()
+         if(AWS.config.credentials.needsRefresh()) {
+            AWS.config.credentials.get(
+               err => {
+                  if(err) 
+                     observer.error(err)
+                  else {
+                     observer.next(AWS.config.credentials.identityId)
+                     observer.complete()
+                  }
+               })
+         }
+         else {
+
+            observer.next(AWS.config.credentials.identityId)
+            observer.complete()
+         }
       }
       else {
          observer.error(new Error('credentials object undefined'))
